@@ -157,10 +157,10 @@ def render_group_summary() -> str:
 
     lines = []
     lines.append(f"📊【{bot} 账单汇总】\n")
-    lines.append("📥 入金记录（最近5笔）")
+    lines.append(f"📥 入金记录（最近5笔，共{len(rec_in)}笔）")
     lines += [f"🕐 {r['ts']}　+{r['raw']} → {fmt_usdt(trunc2(r['usdt']))}" for r in rec_in[:5]] or ["（暂无）"]
     lines.append("")
-    lines.append("📤 出金记录（最近5笔）")
+    lines.append(f"📤 出金记录（最近5笔，共{len(rec_out)}笔）")
     lines += [
         f"🕐 {r['ts']}　下发 {fmt_usdt(trunc2(r['usdt']))}" if r.get('type') == '下发' 
         else f"🕐 {r['ts']}　-{r.get('raw', 0)} → {fmt_usdt(trunc2(r['usdt']))}" if 'raw' in r 
