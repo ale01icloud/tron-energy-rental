@@ -36,7 +36,7 @@ state = {
     },
     "countries": {},
     "precision": {"mode": "truncate", "digits": 2},
-    "bot_name": "@Finance_Bot",
+    "bot_name": "AA全球国际支付",
     "recent": {"in": [], "out": []},
     "summary": {"should_send_usdt": 0.0, "sent_usdt": 0.0}
 }
