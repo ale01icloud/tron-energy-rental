@@ -266,8 +266,7 @@ async def handle_text(update: Update, context: ContextTypes.DEFAULT_TYPE):
     # 撤销操作（回复机器人消息 + 任意文本）
     if update.message.reply_to_message and update.message.reply_to_message.from_user.is_bot:
         if not is_admin(user.id):
-            await update.message.reply_text("🚫 无权限执行撤销操作。")
-            return
+            return  # 非管理员不回复
         
         # 获取被回复的消息内容
         replied_text = update.message.reply_to_message.text or ""
@@ -356,8 +355,7 @@ async def handle_text(update: Update, context: ContextTypes.DEFAULT_TYPE):
     # 简化的设置命令
     if text.startswith(("设置入金费率", "设置入金汇率", "设置出金费率", "设置出金汇率")):
         if not is_admin(user.id):
-            await update.message.reply_text("🚫 无权限执行此命令。")
-            return
+            return  # 非管理员不回复
         try:
             direction = ""
             key = ""
@@ -402,8 +400,7 @@ async def handle_text(update: Update, context: ContextTypes.DEFAULT_TYPE):
     # 高级设置命令（指定国家）
     if text.startswith("设置"):
         if not is_admin(user.id):
-            await update.message.reply_text("🚫 无权限执行此命令。")
-            return
+            return  # 非管理员不回复
         tokens = text.split()
         scope = tokens[1]
         direction = "in" if "入" in text else "out"
@@ -420,8 +417,7 @@ async def handle_text(update: Update, context: ContextTypes.DEFAULT_TYPE):
     # 入金
     if text.startswith("+"):
         if not is_admin(user.id):
-            await update.message.reply_text("🚫 无权限执行入金操作。\n💡 只有机器人管理员可以操作。")
-            return
+            return  # 非管理员不回复
         amt, country = parse_amount_and_country(text)
         p = resolve_params("in", country)
         usdt = trunc2(amt * (1 - p["rate"]) / p["fx"])
@@ -436,8 +432,7 @@ async def handle_text(update: Update, context: ContextTypes.DEFAULT_TYPE):
     # 出金
     if text.startswith("-"):
         if not is_admin(user.id):
-            await update.message.reply_text("🚫 无权限执行出金操作。\n💡 只有机器人管理员可以操作。")
-            return
+            return  # 非管理员不回复
         amt, country = parse_amount_and_country(text)
         p = resolve_params("out", country)
         usdt = trunc2(amt * (1 + p["rate"]) / p["fx"])
@@ -452,8 +447,7 @@ async def handle_text(update: Update, context: ContextTypes.DEFAULT_TYPE):
     # 下发USDT（仅管理员）
     if text.startswith("下发"):
         if not is_admin(user.id):
-            await update.message.reply_text("🚫 无权限执行此命令。")
-            return
+            return  # 非管理员不回复
         try:
             usdt_str = text.replace("下发", "").strip()
             usdt = trunc2(float(usdt_str))  # 对输入也进行精度截断
