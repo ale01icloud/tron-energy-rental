@@ -1,4 +1,7 @@
-# Add your Python package dependencies here
+# Telegram Bot Library
+pyTelegramBotAPI
+
+# Add your other Python package dependencies here
 # Example:
 # requests
 # numpy
