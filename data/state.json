@@ -33,10 +33,23 @@
         "usdt": 58.82
       }
     ],
-    "out": []
+    "out": [
+      {
+        "ts": "18:12",
+        "usdt": -100.0
+      },
+      {
+        "ts": "18:12",
+        "usdt": 65.04
+      },
+      {
+        "ts": "18:12",
+        "usdt": 35.0
+      }
+    ]
   },
   "summary": {
-    "should_send_usdt": 135.04,
-    "sent_usdt": 0.0
+    "should_send_usdt": 135.0,
+    "sent_usdt": 0.04
   }
 }
