@@ -334,12 +334,11 @@ async def handle_text(update: Update, context: ContextTypes.DEFAULT_TYPE):
             await update.message.reply_text("\n".join(lines), parse_mode="Markdown")
             return
         
-        # 检查权限：机器人管理员或群组管理员/群主
-        is_bot_admin = is_admin(user.id)
+        # 检查权限：只有群组管理员/群主可以设置
         is_chat_admin = await is_group_admin(update, context, user.id)
         
-        if not is_bot_admin and not is_chat_admin:
-            await update.message.reply_text("🚫 你没有权限设置机器人管理员。\n💡 只有机器人管理员或群主/群管理员可以执行此操作。")
+        if not is_chat_admin:
+            await update.message.reply_text("🚫 你没有权限设置机器人管理员。\n💡 只有群主/群管理员可以执行此操作。")
             return
         
         if not update.message.reply_to_message:
