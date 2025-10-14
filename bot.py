@@ -161,7 +161,12 @@ def render_group_summary() -> str:
     lines += [f"🕐 {r['ts']}　+{r['raw']} → {fmt_usdt(trunc2(r['usdt']))}" for r in rec_in[:5]] or ["（暂无）"]
     lines.append("")
     lines.append("📤 出金记录（最近5笔）")
-    lines += [f"🕐 {r['ts']}　-{r.get('raw', 0)} → {fmt_usdt(trunc2(r['usdt']))}" if 'raw' in r else f"🕐 {r['ts']}　{fmt_usdt(trunc2(r['usdt']))}" for r in rec_out[:5]] or ["（暂无）"]
+    lines += [
+        f"🕐 {r['ts']}　下发 {fmt_usdt(trunc2(r['usdt']))}" if r.get('type') == '下发' 
+        else f"🕐 {r['ts']}　-{r.get('raw', 0)} → {fmt_usdt(trunc2(r['usdt']))}" if 'raw' in r 
+        else f"🕐 {r['ts']}　{fmt_usdt(trunc2(r['usdt']))}" 
+        for r in rec_out[:5]
+    ] or ["（暂无）"]
     lines.append("")
     lines.append("━━━━━━━━━━━━━━")
     lines.append(f"⚙️ 当前费率：入 {rin*100:.0f}% ⇄ 出 {rout*100:.0f}%")
@@ -413,13 +418,13 @@ async def handle_text(update: Update, context: ContextTypes.DEFAULT_TYPE):
             if usdt > 0:
                 # 正数：扣除应下发
                 state["summary"]["should_send_usdt"] = trunc2(state["summary"]["should_send_usdt"] - usdt)
-                push_recent("out", {"ts": ts, "usdt": usdt})
+                push_recent("out", {"ts": ts, "usdt": usdt, "type": "下发"})
                 append_log(log_path(None, dstr), f"[下发USDT] 时间:{ts} 金额:{usdt} USDT")
             else:
                 # 负数：增加应下发（撤销）
                 usdt_abs = trunc2(abs(usdt))  # 对绝对值也进行精度截断
                 state["summary"]["should_send_usdt"] = trunc2(state["summary"]["should_send_usdt"] + usdt_abs)
-                push_recent("out", {"ts": ts, "usdt": usdt})
+                push_recent("out", {"ts": ts, "usdt": usdt, "type": "下发"})
                 append_log(log_path(None, dstr), f"[撤销下发] 时间:{ts} 金额:{usdt_abs} USDT")
             
             save_state()
