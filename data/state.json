@@ -19,13 +19,17 @@
     "in": [],
     "out": [
       {
+        "ts": "18:36",
+        "usdt": -100.0
+      },
+      {
         "ts": "18:33",
         "usdt": -100.0
       }
     ]
   },
   "summary": {
-    "should_send_usdt": 100.0,
+    "should_send_usdt": 200.0,
     "sent_usdt": 0.0
   }
 }
