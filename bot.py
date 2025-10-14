@@ -357,9 +357,32 @@ async def handle_text(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if text.startswith(("设置机器人管理员", "删除机器人管理员", "显示机器人管理员")):
         lst = list_admins()
         if text.startswith("显示"):
-            lines = [f"⭐ 超级管理员：{OWNER_ID or '未设置'}"]
-            for a in lst: lines.append(f"- [ID {a}](tg://user?id={a})")
-            await update.message.reply_text("\n".join(lines), parse_mode="Markdown")
+            lines = ["👥 机器人管理员列表\n"]
+            lines.append(f"⭐ 超级管理员：{OWNER_ID or '未设置'}\n")
+            
+            if lst:
+                lines.append("📋 机器人管理员：")
+                for admin_id in lst:
+                    try:
+                        # 尝试获取用户信息
+                        chat_member = await context.bot.get_chat_member(update.effective_chat.id, admin_id)
+                        user_info = chat_member.user
+                        
+                        # 构建显示信息
+                        name = user_info.full_name
+                        username = f"@{user_info.username}" if user_info.username else ""
+                        
+                        if username:
+                            lines.append(f"• {name} ({username}) - ID: {admin_id}")
+                        else:
+                            lines.append(f"• {name} - ID: {admin_id}")
+                    except Exception:
+                        # 如果获取失败，只显示ID
+                        lines.append(f"• ID: {admin_id}")
+            else:
+                lines.append("暂无机器人管理员")
+            
+            await update.message.reply_text("\n".join(lines))
             return
         
         # 检查权限：只有群组管理员/群主可以设置
