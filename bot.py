@@ -77,10 +77,14 @@ def fmt_usdt(x: float) -> str:
     return f"{x:.2f} USDT"
 
 def now_ts():
-    return datetime.datetime.now().strftime("%H:%M")
+    # 使用北京时间（UTC+8）
+    beijing_tz = datetime.timezone(datetime.timedelta(hours=8))
+    return datetime.datetime.now(beijing_tz).strftime("%H:%M")
 
 def today_str():
-    return datetime.datetime.now().strftime("%Y-%m-%d")
+    # 使用北京时间（UTC+8）
+    beijing_tz = datetime.timezone(datetime.timedelta(hours=8))
+    return datetime.datetime.now(beijing_tz).strftime("%Y-%m-%d")
 
 def log_path(country: str|None, date_str: str) -> Path:
     folder = country if country else "通用"
