@@ -232,15 +232,19 @@ async def handle_text(update: Update, context: ContextTypes.DEFAULT_TYPE):
         # 尝试从消息中提取最近的入金或下发记录
         import re
         
-        # 匹配入金记录: 🕐 14:30　+10000 → 58.82 USDT
-        in_match = re.search(r'🕐\s*(\d+:\d+)\s*　\+(\d+(?:\.\d+)?)\s*→\s*(\d+(?:\.\d+)?)\s*USDT', replied_text)
-        # 匹配下发记录: 🕐 14:30　35.04 USDT 或 🕐 14:30　-35.04 USDT
-        out_match = re.search(r'🕐\s*(\d+:\d+)\s*　(-?\d+(?:\.\d+)?)\s*USDT', replied_text)
+        # 匹配所有入金记录: 🕐 14:30　+10000 → 58.82 USDT
+        in_matches = re.findall(r'🕐\s*(\d+:\d+)\s*　\+(\d+(?:\.\d+)?)\s*→\s*(\d+(?:\.\d+)?)\s*USDT', replied_text)
+        # 匹配所有下发记录: 🕐 14:30　35.04 USDT 或 🕐 14:30　-35.04 USDT
+        out_matches = re.findall(r'🕐\s*(\d+:\d+)\s*　(-?\d+(?:\.\d+)?)\s*USDT', replied_text)
+        
+        # 取最后一笔（最新的）记录
+        in_match = in_matches[-1] if in_matches else None
+        out_match = out_matches[-1] if out_matches else None
         
         if in_match:
             # 撤销入金
-            raw_amt = trunc2(float(in_match.group(2)))
-            usdt_amt = trunc2(float(in_match.group(3)))
+            raw_amt = trunc2(float(in_match[1]))
+            usdt_amt = trunc2(float(in_match[2]))
             
             # 反向操作：减少应下发
             state["summary"]["should_send_usdt"] = trunc2(state["summary"]["should_send_usdt"] - usdt_amt)
@@ -256,7 +260,7 @@ async def handle_text(update: Update, context: ContextTypes.DEFAULT_TYPE):
             
         elif out_match:
             # 撤销下发
-            usdt_amt = trunc2(float(out_match.group(2)))
+            usdt_amt = trunc2(float(out_match[1]))
             
             # 反向操作：如果是正数下发，撤销后增加应下发；如果是负数，则减少应下发
             state["summary"]["should_send_usdt"] = trunc2(state["summary"]["should_send_usdt"] + usdt_amt)
