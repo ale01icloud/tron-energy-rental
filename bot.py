@@ -527,7 +527,7 @@ async def handle_text(update: Update, context: ContextTypes.DEFAULT_TYPE):
         await update.message.reply_text(render_full_summary())
         return
 
-    await update.message.reply_text("❌ 无效操作")
+    # 无效操作不回复
 
 # ========== 启动 ==========
 if __name__ == "__main__":
