@@ -195,6 +195,9 @@ async def cmd_start(update: Update, context: ContextTypes.DEFAULT_TYPE):
         "  入金：+10000 或 +10000 / 日本\n"
         "  出金：-10000 或 -10000 / 日本\n"
         "  查看账单：更多账单\n\n"
+        "💰 USDT下发（仅管理员）：\n"
+        "  下发35.04（记录下发并扣除应下发）\n"
+        "  下发-35.04（撤销下发并增加应下发）\n\n"
         "⚙️ 快速设置（仅管理员）：\n"
         "  设置入金费率 10\n"
         "  设置入金汇率 153\n"
@@ -331,6 +334,35 @@ async def handle_text(update: Update, context: ContextTypes.DEFAULT_TYPE):
         append_log(log_path(country, dstr),
                    f"[出金] 时间:{ts} 国家:{country or '通用'} 原始:{amt} 汇率:{p['fx']} 费率:{p['rate']*100:.2f}% 下发:{usdt}")
         await update.message.reply_text(render_group_summary())
+        return
+
+    # 下发USDT（仅管理员）
+    if text.startswith("下发"):
+        if not is_admin(user.id):
+            await update.message.reply_text("🚫 无权限执行此命令。")
+            return
+        try:
+            usdt_str = text.replace("下发", "").strip()
+            usdt = float(usdt_str)
+            usdt_abs = trunc2(abs(usdt))
+            
+            if usdt > 0:
+                # 正数：增加已下发，减少应下发
+                state["summary"]["sent_usdt"] = trunc2(state["summary"]["sent_usdt"] + usdt_abs)
+                state["summary"]["should_send_usdt"] = trunc2(state["summary"]["should_send_usdt"] - usdt_abs)
+                push_recent("out", {"ts": ts, "usdt": usdt_abs})
+                append_log(log_path(None, dstr), f"[下发USDT] 时间:{ts} 金额:{usdt_abs} USDT")
+            else:
+                # 负数：减少已下发，增加应下发（撤销下发）
+                state["summary"]["sent_usdt"] = trunc2(state["summary"]["sent_usdt"] - usdt_abs)
+                state["summary"]["should_send_usdt"] = trunc2(state["summary"]["should_send_usdt"] + usdt_abs)
+                push_recent("out", {"ts": ts, "usdt": -usdt_abs})
+                append_log(log_path(None, dstr), f"[撤销下发] 时间:{ts} 金额:{usdt_abs} USDT")
+            
+            save_state()
+            await update.message.reply_text(render_group_summary())
+        except ValueError:
+            await update.message.reply_text("❌ 格式错误，请输入有效的数字\n例如：下发35.04 或 下发-35.04")
         return
 
     # 历史
