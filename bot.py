@@ -404,7 +404,7 @@ async def handle_text(update: Update, context: ContextTypes.DEFAULT_TYPE):
             return
         try:
             usdt_str = text.replace("下发", "").strip()
-            usdt = float(usdt_str)
+            usdt = trunc2(float(usdt_str))  # 对输入也进行精度截断
             
             if usdt > 0:
                 # 正数：扣除应下发
@@ -413,7 +413,7 @@ async def handle_text(update: Update, context: ContextTypes.DEFAULT_TYPE):
                 append_log(log_path(None, dstr), f"[下发USDT] 时间:{ts} 金额:{usdt} USDT")
             else:
                 # 负数：增加应下发（撤销）
-                usdt_abs = abs(usdt)
+                usdt_abs = trunc2(abs(usdt))  # 对绝对值也进行精度截断
                 state["summary"]["should_send_usdt"] = trunc2(state["summary"]["should_send_usdt"] + usdt_abs)
                 push_recent("out", {"ts": ts, "usdt": usdt})
                 append_log(log_path(None, dstr), f"[撤销下发] 时间:{ts} 金额:{usdt_abs} USDT")
