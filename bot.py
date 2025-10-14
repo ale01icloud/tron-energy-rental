@@ -38,7 +38,8 @@ state = {
     "precision": {"mode": "truncate", "digits": 2},
     "bot_name": "AA全球国际支付",
     "recent": {"in": [], "out": []},
-    "summary": {"should_send_usdt": 0.0, "sent_usdt": 0.0}
+    "summary": {"should_send_usdt": 0.0, "sent_usdt": 0.0},
+    "last_date": ""  # 记录上次操作的日期，用于每日重置
 }
 
 def load_state():
@@ -85,6 +86,27 @@ def today_str():
     # 使用北京时间（UTC+8）
     beijing_tz = datetime.timezone(datetime.timedelta(hours=8))
     return datetime.datetime.now(beijing_tz).strftime("%Y-%m-%d")
+
+def check_and_reset_daily():
+    """检查日期，如果日期变了（过了0点），清空账单"""
+    current_date = today_str()
+    last_date = state.get("last_date", "")
+    
+    if last_date and last_date != current_date:
+        # 日期变了，清空账单
+        state["recent"]["in"] = []
+        state["recent"]["out"] = []
+        state["summary"]["should_send_usdt"] = 0.0
+        state["summary"]["sent_usdt"] = 0.0
+        state["last_date"] = current_date
+        save_state()
+        return True  # 返回True表示已重置
+    elif not last_date:
+        # 首次运行，设置日期
+        state["last_date"] = current_date
+        save_state()
+    
+    return False  # 返回False表示未重置
 
 def log_path(country: str|None, date_str: str) -> Path:
     folder = country if country else "通用"
@@ -266,6 +288,9 @@ async def handle_text(update: Update, context: ContextTypes.DEFAULT_TYPE):
     user = update.effective_user
     text = (update.message.text or "").strip()
     ts, dstr = now_ts(), today_str()
+    
+    # 检查日期并在需要时重置账单
+    check_and_reset_daily()
     
     # 撤销操作（回复机器人消息 + 任意文本）
     if update.message.reply_to_message and update.message.reply_to_message.from_user.is_bot:
