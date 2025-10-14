@@ -198,6 +198,10 @@ async def cmd_start(update: Update, context: ContextTypes.DEFAULT_TYPE):
         "💰 USDT下发（仅管理员）：\n"
         "  下发35.04（记录下发并扣除应下发）\n"
         "  下发-35.04（撤销下发并增加应下发）\n\n"
+        "🔄 撤销操作（仅管理员）：\n"
+        "  回复账单消息 + 任意文字\n"
+        "  系统会自动识别并撤销该笔记录\n"
+        "  标记为「无效操作」\n\n"
         "⚙️ 快速设置（仅管理员）：\n"
         "  设置入金费率 10\n"
         "  设置入金汇率 153\n"
@@ -216,6 +220,59 @@ async def handle_text(update: Update, context: ContextTypes.DEFAULT_TYPE):
     user = update.effective_user
     text = (update.message.text or "").strip()
     ts, dstr = now_ts(), today_str()
+    
+    # 撤销操作（回复机器人消息 + 任意文本）
+    if update.message.reply_to_message and update.message.reply_to_message.from_user.is_bot:
+        if not is_admin(user.id):
+            await update.message.reply_text("🚫 无权限执行撤销操作。")
+            return
+        
+        # 获取被回复的消息内容
+        replied_text = update.message.reply_to_message.text or ""
+        
+        # 尝试从消息中提取最近的入金或下发记录
+        import re
+        
+        # 匹配入金记录: 🕐 14:30　+10000 → 58.82 USDT
+        in_match = re.search(r'🕐\s*(\d+:\d+)\s*　\+(\d+(?:\.\d+)?)\s*→\s*(\d+(?:\.\d+)?)\s*USDT', replied_text)
+        # 匹配下发记录: 🕐 14:30　35.04 USDT 或 🕐 14:30　-35.04 USDT
+        out_match = re.search(r'🕐\s*(\d+:\d+)\s*　(-?\d+(?:\.\d+)?)\s*USDT', replied_text)
+        
+        if in_match:
+            # 撤销入金
+            raw_amt = float(in_match.group(2))
+            usdt_amt = float(in_match.group(3))
+            
+            # 反向操作：减少应下发
+            state["summary"]["should_send_usdt"] = trunc2(state["summary"]["should_send_usdt"] - usdt_amt)
+            
+            # 从最近记录中移除（如果存在）
+            state["recent"]["in"] = [r for r in state["recent"]["in"] if not (r.get("raw") == raw_amt and r.get("usdt") == usdt_amt)]
+            
+            save_state()
+            append_log(log_path(None, dstr), f"[撤销入金] 时间:{ts} 原金额:{raw_amt} USDT:{usdt_amt} 标记:无效操作")
+            await update.message.reply_text(f"✅ 已撤销入金记录\n❌ 标记为：无效操作\n📊 原金额：+{raw_amt} → {usdt_amt} USDT")
+            await update.message.reply_text(render_group_summary())
+            return
+            
+        elif out_match:
+            # 撤销下发
+            usdt_amt = float(out_match.group(2))
+            
+            # 反向操作：如果是正数下发，撤销后增加应下发；如果是负数，则减少应下发
+            state["summary"]["should_send_usdt"] = trunc2(state["summary"]["should_send_usdt"] + usdt_amt)
+            
+            # 从最近记录中移除
+            state["recent"]["out"] = [r for r in state["recent"]["out"] if r.get("usdt") != usdt_amt]
+            
+            save_state()
+            append_log(log_path(None, dstr), f"[撤销下发] 时间:{ts} USDT:{usdt_amt} 标记:无效操作")
+            await update.message.reply_text(f"✅ 已撤销下发记录\n❌ 标记为：无效操作\n📊 原金额：{usdt_amt} USDT")
+            await update.message.reply_text(render_group_summary())
+            return
+        else:
+            await update.message.reply_text("❌ 无法识别要撤销的操作\n💡 请回复包含入金或下发记录的账单消息")
+            return
 
     # 管理员管理命令
     if text.startswith(("设置机器人管理员", "删除机器人管理员", "显示机器人管理员")):
