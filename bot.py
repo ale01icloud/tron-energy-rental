@@ -190,15 +190,22 @@ async def is_group_admin(update: Update, context: ContextTypes.DEFAULT_TYPE, use
 
 async def cmd_start(update: Update, context: ContextTypes.DEFAULT_TYPE):
     await update.message.reply_text(
-        "🤖 你好，我是财务记账机器人。\n"
-        "入金：+10000 或 +10000 / 日本\n"
-        "出金：-10000 或 -10000 / 日本（法币→USDT）\n"
-        "设置 示例：\n"
-        "  设置 默认 入 费率 10\n"
-        "  设置 日本 入 汇率 127\n"
-        "管理员管理：\n"
-        "  设置机器人管理员 @用户名\n"
-        "  删除机器人管理员 @用户名\n"
+        "🤖 你好，我是财务记账机器人。\n\n"
+        "📊 记账操作：\n"
+        "  入金：+10000 或 +10000 / 日本\n"
+        "  出金：-10000 或 -10000 / 日本\n"
+        "  查看账单：更多账单\n\n"
+        "⚙️ 快速设置（仅管理员）：\n"
+        "  设置入金费率 10\n"
+        "  设置入金汇率 153\n"
+        "  设置出金费率 -2\n"
+        "  设置出金汇率 137\n\n"
+        "🔧 高级设置（指定国家）：\n"
+        "  设置 日本 入 费率 8\n"
+        "  设置 日本 入 汇率 127\n\n"
+        "👥 管理员管理：\n"
+        "  设置机器人管理员（回复消息）\n"
+        "  删除机器人管理员（回复消息）\n"
         "  显示机器人管理员"
     )
 
@@ -236,7 +243,53 @@ async def handle_text(update: Update, context: ContextTypes.DEFAULT_TYPE):
             await update.message.reply_text(f"🗑️ 已移除 {target.mention_html()} 的机器人管理员权限。", parse_mode="HTML")
         return
 
-    # 设置命令
+    # 简化的设置命令
+    if text.startswith(("设置入金费率", "设置入金汇率", "设置出金费率", "设置出金汇率")):
+        if not is_admin(user.id):
+            await update.message.reply_text("🚫 无权限执行此命令。")
+            return
+        try:
+            direction = ""
+            key = ""
+            val = 0.0
+            display_val = ""
+            
+            # 解析命令
+            if "入金费率" in text:
+                direction, key = "in", "rate"
+                val = float(text.replace("设置入金费率", "").strip())
+                val /= 100.0  # 转换为小数
+                display_val = f"{val*100:.0f}%"
+            elif "入金汇率" in text:
+                direction, key = "in", "fx"
+                val = float(text.replace("设置入金汇率", "").strip())
+                display_val = str(val)
+            elif "出金费率" in text:
+                direction, key = "out", "rate"
+                val = float(text.replace("设置出金费率", "").strip())
+                val /= 100.0  # 转换为小数
+                display_val = f"{val*100:.0f}%"
+            elif "出金汇率" in text:
+                direction, key = "out", "fx"
+                val = float(text.replace("设置出金汇率", "").strip())
+                display_val = str(val)
+            
+            # 更新默认设置
+            state["defaults"][direction][key] = val
+            save_state()
+            
+            # 构建回复消息
+            type_name = "费率" if key == "rate" else "汇率"
+            dir_name = "入金" if direction == "in" else "出金"
+            await update.message.reply_text(
+                f"✅ 已设置默认{dir_name}{type_name}\n"
+                f"📊 新值：{display_val}"
+            )
+        except ValueError:
+            await update.message.reply_text("❌ 格式错误，请输入有效的数字\n例如：设置入金费率 10")
+        return
+
+    # 高级设置命令（指定国家）
     if text.startswith("设置"):
         if not is_admin(user.id):
             await update.message.reply_text("🚫 无权限执行此命令。")
