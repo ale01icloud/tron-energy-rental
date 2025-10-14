@@ -19,11 +19,6 @@
     "in": [
       {
         "ts": "18:04",
-        "raw": 10000.0,
-        "usdt": 76.22
-      },
-      {
-        "ts": "18:04",
         "raw": 0.0,
         "usdt": 0.0
       },
@@ -57,7 +52,7 @@
     ]
   },
   "summary": {
-    "should_send_usdt": 100.04,
+    "should_send_usdt": 23.82,
     "sent_usdt": 0.04
   }
 }
