@@ -17,10 +17,15 @@
   "bot_name": "@Finance_Bot",
   "recent": {
     "in": [],
-    "out": []
+    "out": [
+      {
+        "ts": "18:33",
+        "usdt": -100.0
+      }
+    ]
   },
   "summary": {
-    "should_send_usdt": 0.0,
+    "should_send_usdt": 100.0,
     "sent_usdt": 0.0
   }
 }
