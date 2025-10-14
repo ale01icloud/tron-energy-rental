@@ -294,6 +294,8 @@ async def cmd_start(update: Update, context: ContextTypes.DEFAULT_TYPE):
             # 非管理员私聊 - 显示如何成为管理员的步骤
             await update.message.reply_text(
                 "👋 你好！欢迎使用财务记账机器人\n\n"
+                "💬 发送 /start 查看完整操作说明\n"
+                "━━━━━━━━━━━━━━━━━━━━\n\n"
                 "📌 如何成为机器人管理员（详细步骤）：\n\n"
                 "第1步：添加机器人到群组\n"
                 "  • 点击机器人头像\n"
@@ -321,7 +323,9 @@ async def cmd_start(update: Update, context: ContextTypes.DEFAULT_TYPE):
                 "💡 重要提示：\n"
                 "  ⚠️ 只有机器人管理员的操作才会被响应\n"
                 "  ⚠️ 普通成员的操作机器人不会回复\n"
-                "  ⚠️ 只有群主/群管理员能设置机器人管理员"
+                "  ⚠️ 只有群主/群管理员能设置机器人管理员\n\n"
+                "━━━━━━━━━━━━━━━━━━━━\n"
+                "👉 再次发送 /start 查看完整功能列表"
             )
     else:
         # 群聊模式 - 显示完整操作说明
