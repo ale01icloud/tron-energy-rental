@@ -158,10 +158,10 @@ def render_group_summary() -> str:
     lines = []
     lines.append(f"📊【{bot} 账单汇总】\n")
     lines.append("📥 入金记录（最近5笔）")
-    lines += [f"🕐 {r['ts']}　+{r['raw']} → {fmt_usdt(r['usdt'])}" for r in rec_in[:5]] or ["（暂无）"]
+    lines += [f"🕐 {r['ts']}　+{r['raw']} → {fmt_usdt(trunc2(r['usdt']))}" for r in rec_in[:5]] or ["（暂无）"]
     lines.append("")
     lines.append("📤 下发记录（最近5笔）")
-    lines += [f"🕐 {r['ts']}　{fmt_usdt(r['usdt'])}" for r in rec_out[:5]] or ["（暂无）"]
+    lines += [f"🕐 {r['ts']}　{fmt_usdt(trunc2(r['usdt']))}" for r in rec_out[:5]] or ["（暂无）"]
     lines.append("")
     lines.append("━━━━━━━━━━━━━━")
     lines.append(f"⚙️ 当前费率：入 {rin*100:.0f}% ⇄ 出 {rout*100:.0f}%")
@@ -239,8 +239,8 @@ async def handle_text(update: Update, context: ContextTypes.DEFAULT_TYPE):
         
         if in_match:
             # 撤销入金
-            raw_amt = float(in_match.group(2))
-            usdt_amt = float(in_match.group(3))
+            raw_amt = trunc2(float(in_match.group(2)))
+            usdt_amt = trunc2(float(in_match.group(3)))
             
             # 反向操作：减少应下发
             state["summary"]["should_send_usdt"] = trunc2(state["summary"]["should_send_usdt"] - usdt_amt)
@@ -256,7 +256,7 @@ async def handle_text(update: Update, context: ContextTypes.DEFAULT_TYPE):
             
         elif out_match:
             # 撤销下发
-            usdt_amt = float(out_match.group(2))
+            usdt_amt = trunc2(float(out_match.group(2)))
             
             # 反向操作：如果是正数下发，撤销后增加应下发；如果是负数，则减少应下发
             state["summary"]["should_send_usdt"] = trunc2(state["summary"]["should_send_usdt"] + usdt_amt)
