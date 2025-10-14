@@ -419,6 +419,9 @@ async def handle_text(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
     # 入金
     if text.startswith("+"):
+        if not is_admin(user.id):
+            await update.message.reply_text("🚫 无权限执行入金操作。\n💡 只有机器人管理员可以操作。")
+            return
         amt, country = parse_amount_and_country(text)
         p = resolve_params("in", country)
         usdt = trunc2(amt * (1 - p["rate"]) / p["fx"])
@@ -432,6 +435,9 @@ async def handle_text(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
     # 出金
     if text.startswith("-"):
+        if not is_admin(user.id):
+            await update.message.reply_text("🚫 无权限执行出金操作。\n💡 只有机器人管理员可以操作。")
+            return
         amt, country = parse_amount_and_country(text)
         p = resolve_params("out", country)
         usdt = trunc2(amt * (1 + p["rate"]) / p["fx"])
