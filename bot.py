@@ -95,8 +95,7 @@ def append_log(path: Path, text: str):
 def push_recent(kind: str, item: dict):
     arr = state["recent"][kind]
     arr.insert(0, item)
-    if len(arr) > 5:
-        arr.pop()
+    # 不再限制记录数量，保存当天所有记录
 
 def resolve_params(direction: str, country: str|None) -> dict:
     d = {"rate": None, "fx": None}
