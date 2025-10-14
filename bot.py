@@ -175,7 +175,46 @@ def render_group_summary() -> str:
     lines.append(f"📤 已下发：{fmt_usdt(sent)}")
     lines.append(f"{'❗' if diff != 0 else '✅'} 未下发：{fmt_usdt(diff)}")
     lines.append("━━━━━━━━━━━━━━")
-    lines.append("📚 **查看更多账单**：发送「更多账单」或「显示历史账单」")
+    lines.append("📚 **查看更多记录**：发送「更多记录」")
+    return "\n".join(lines)
+
+def render_full_summary() -> str:
+    """显示当天所有记录"""
+    bot = state["bot_name"]
+    rec_in, rec_out = state["recent"]["in"], state["recent"]["out"]
+    should, sent = trunc2(state["summary"]["should_send_usdt"]), trunc2(state["summary"]["sent_usdt"])
+    diff = trunc2(should - sent)
+    rin, fin = state["defaults"]["in"]["rate"], state["defaults"]["in"]["fx"]
+    rout, fout = state["defaults"]["out"]["rate"], state["defaults"]["out"]["fx"]
+
+    lines = []
+    lines.append(f"📊【{bot} 完整账单】\n")
+    lines.append(f"📥 入金记录（共{len(rec_in)}笔）")
+    if rec_in:
+        lines += [f"🕐 {r['ts']}　+{r['raw']} → {fmt_usdt(trunc2(r['usdt']))}" for r in rec_in]
+    else:
+        lines.append("（暂无）")
+    
+    lines.append("")
+    lines.append(f"📤 出金记录（共{len(rec_out)}笔）")
+    if rec_out:
+        lines += [
+            f"🕐 {r['ts']}　下发 {fmt_usdt(trunc2(r['usdt']))}" if r.get('type') == '下发' 
+            else f"🕐 {r['ts']}　-{r.get('raw', 0)} → {fmt_usdt(trunc2(r['usdt']))}" if 'raw' in r 
+            else f"🕐 {r['ts']}　{fmt_usdt(trunc2(r['usdt']))}" 
+            for r in rec_out
+        ]
+    else:
+        lines.append("（暂无）")
+    
+    lines.append("")
+    lines.append("━━━━━━━━━━━━━━")
+    lines.append(f"⚙️ 当前费率：入 {rin*100:.0f}% ⇄ 出 {rout*100:.0f}%")
+    lines.append(f"💱 固定汇率：入 {fin} ⇄ 出 {fout}")
+    lines.append(f"📊 应下发：{fmt_usdt(should)}")
+    lines.append(f"📤 已下发：{fmt_usdt(sent)}")
+    lines.append(f"{'❗' if diff != 0 else '✅'} 未下发：{fmt_usdt(diff)}")
+    lines.append("━━━━━━━━━━━━━━")
     return "\n".join(lines)
 
 # ========== Telegram ==========
@@ -199,7 +238,7 @@ async def cmd_start(update: Update, context: ContextTypes.DEFAULT_TYPE):
         "📊 记账操作：\n"
         "  入金：+10000 或 +10000 / 日本\n"
         "  出金：-10000 或 -10000 / 日本\n"
-        "  查看账单：+0 或 更多账单\n\n"
+        "  查看账单：+0 或 更多记录\n\n"
         "💰 USDT下发（仅管理员）：\n"
         "  下发35.04（记录下发并扣除应下发）\n"
         "  下发-35.04（撤销下发并增加应下发）\n\n"
@@ -433,9 +472,9 @@ async def handle_text(update: Update, context: ContextTypes.DEFAULT_TYPE):
             await update.message.reply_text("❌ 格式错误，请输入有效的数字\n例如：下发35.04 或 下发-35.04")
         return
 
-    # 历史
-    if text in ["更多账单", "显示历史账单"]:
-        await update.message.reply_text(render_group_summary())
+    # 查看更多记录
+    if text in ["更多记录", "查看更多记录", "更多账单", "显示历史账单"]:
+        await update.message.reply_text(render_full_summary())
         return
 
     await update.message.reply_text("❓ 指令示例：+10000 / 日本 或 设置 默认 入 费率 10")
