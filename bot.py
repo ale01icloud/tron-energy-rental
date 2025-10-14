@@ -160,8 +160,8 @@ def render_group_summary() -> str:
     lines.append("📥 入金记录（最近5笔）")
     lines += [f"🕐 {r['ts']}　+{r['raw']} → {fmt_usdt(trunc2(r['usdt']))}" for r in rec_in[:5]] or ["（暂无）"]
     lines.append("")
-    lines.append("📤 下发记录（最近5笔）")
-    lines += [f"🕐 {r['ts']}　{fmt_usdt(trunc2(r['usdt']))}" for r in rec_out[:5]] or ["（暂无）"]
+    lines.append("📤 出金记录（最近5笔）")
+    lines += [f"🕐 {r['ts']}　-{r.get('raw', 0)} → {fmt_usdt(trunc2(r['usdt']))}" if 'raw' in r else f"🕐 {r['ts']}　{fmt_usdt(trunc2(r['usdt']))}" for r in rec_out[:5]] or ["（暂无）"]
     lines.append("")
     lines.append("━━━━━━━━━━━━━━")
     lines.append(f"⚙️ 当前费率：入 {rin*100:.0f}% ⇄ 出 {rout*100:.0f}%")
@@ -393,7 +393,7 @@ async def handle_text(update: Update, context: ContextTypes.DEFAULT_TYPE):
         amt, country = parse_amount_and_country(text)
         p = resolve_params("out", country)
         usdt = trunc2(amt * (1 + p["rate"]) / p["fx"])
-        push_recent("out", {"ts": ts, "usdt": usdt})
+        push_recent("out", {"ts": ts, "raw": amt, "usdt": usdt})
         state["summary"]["sent_usdt"] = trunc2(state["summary"]["sent_usdt"] + usdt)
         save_state()
         append_log(log_path(country, dstr),

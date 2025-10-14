@@ -17,10 +17,15 @@
   "bot_name": "AA全球国际支付",
   "recent": {
     "in": [],
-    "out": []
+    "out": [
+      {
+        "ts": "18:43",
+        "usdt": 71.53
+      }
+    ]
   },
   "summary": {
     "should_send_usdt": 100.0,
-    "sent_usdt": 0.0
+    "sent_usdt": 71.53
   }
 }
