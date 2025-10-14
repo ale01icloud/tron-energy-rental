@@ -527,7 +527,7 @@ async def handle_text(update: Update, context: ContextTypes.DEFAULT_TYPE):
         await update.message.reply_text(render_full_summary())
         return
 
-    await update.message.reply_text("❓ 指令示例：+10000 / 日本 或 设置 默认 入 费率 10")
+    await update.message.reply_text("❌ 无效操作")
 
 # ========== 启动 ==========
 if __name__ == "__main__":
