@@ -1,14 +1,3 @@
-# Telegram Bot Library (python-telegram-bot)
-python-telegram-bot
-
-# Web Framework
-Flask
-
-# Environment Variables
-python-dotenv
-
-# Add your other Python package dependencies here
-# Example:
-# requests
-# numpy
-# pandas
+python-telegram-bot==21.3
+Flask==3.0.3
+python-dotenv==1.0.1
