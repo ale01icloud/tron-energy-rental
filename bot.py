@@ -344,19 +344,17 @@ async def handle_text(update: Update, context: ContextTypes.DEFAULT_TYPE):
         try:
             usdt_str = text.replace("下发", "").strip()
             usdt = float(usdt_str)
-            usdt_abs = trunc2(abs(usdt))
             
             if usdt > 0:
-                # 正数：增加已下发，减少应下发
-                state["summary"]["sent_usdt"] = trunc2(state["summary"]["sent_usdt"] + usdt_abs)
-                state["summary"]["should_send_usdt"] = trunc2(state["summary"]["should_send_usdt"] - usdt_abs)
-                push_recent("out", {"ts": ts, "usdt": usdt_abs})
-                append_log(log_path(None, dstr), f"[下发USDT] 时间:{ts} 金额:{usdt_abs} USDT")
+                # 正数：扣除应下发
+                state["summary"]["should_send_usdt"] = trunc2(state["summary"]["should_send_usdt"] - usdt)
+                push_recent("out", {"ts": ts, "usdt": usdt})
+                append_log(log_path(None, dstr), f"[下发USDT] 时间:{ts} 金额:{usdt} USDT")
             else:
-                # 负数：减少已下发，增加应下发（撤销下发）
-                state["summary"]["sent_usdt"] = trunc2(state["summary"]["sent_usdt"] - usdt_abs)
+                # 负数：增加应下发（撤销）
+                usdt_abs = abs(usdt)
                 state["summary"]["should_send_usdt"] = trunc2(state["summary"]["should_send_usdt"] + usdt_abs)
-                push_recent("out", {"ts": ts, "usdt": -usdt_abs})
+                push_recent("out", {"ts": ts, "usdt": usdt})
                 append_log(log_path(None, dstr), f"[撤销下发] 时间:{ts} 金额:{usdt_abs} USDT")
             
             save_state()
