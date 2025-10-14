@@ -251,7 +251,7 @@ async def handle_text(update: Update, context: ContextTypes.DEFAULT_TYPE):
             
             save_state()
             append_log(log_path(None, dstr), f"[撤销入金] 时间:{ts} 原金额:{raw_amt} USDT:{usdt_amt} 标记:无效操作")
-            await update.message.reply_text(f"✅ 已撤销入金记录\n❌ 标记为：无效操作\n📊 原金额：+{raw_amt} → {usdt_amt} USDT")
+            await update.message.reply_text(f"✅ 已撤销入金记录\n📊 原金额：+{raw_amt} → {usdt_amt} USDT")
             await update.message.reply_text(render_group_summary())
             return
             
@@ -267,7 +267,7 @@ async def handle_text(update: Update, context: ContextTypes.DEFAULT_TYPE):
             
             save_state()
             append_log(log_path(None, dstr), f"[撤销下发] 时间:{ts} USDT:{usdt_amt} 标记:无效操作")
-            await update.message.reply_text(f"✅ 已撤销下发记录\n❌ 标记为：无效操作\n📊 原金额：{usdt_amt} USDT")
+            await update.message.reply_text(f"✅ 已撤销下发记录\n📊 原金额：{usdt_amt} USDT")
             await update.message.reply_text(render_group_summary())
             return
         else:
