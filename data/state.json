@@ -1,0 +1,32 @@
+{
+  "defaults": {
+    "in": {
+      "rate": 0.1,
+      "fx": 153
+    },
+    "out": {
+      "rate": -0.02,
+      "fx": 137
+    }
+  },
+  "countries": {},
+  "precision": {
+    "mode": "truncate",
+    "digits": 2
+  },
+  "bot_name": "@Finance_Bot",
+  "recent": {
+    "in": [
+      {
+        "ts": "17:48",
+        "raw": 10000.0,
+        "usdt": 58.82
+      }
+    ],
+    "out": []
+  },
+  "summary": {
+    "should_send_usdt": 58.82,
+    "sent_usdt": 0.0
+  }
+}

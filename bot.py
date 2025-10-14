@@ -177,6 +177,17 @@ def render_group_summary() -> str:
 from telegram import Update
 from telegram.ext import ApplicationBuilder, MessageHandler, CommandHandler, filters, ContextTypes
 
+async def is_group_admin(update: Update, context: ContextTypes.DEFAULT_TYPE, user_id: int) -> bool:
+    """检查用户是否是群组管理员或群主"""
+    chat = update.effective_chat
+    if chat.type == "private":
+        return False
+    try:
+        member = await context.bot.get_chat_member(chat.id, user_id)
+        return member.status in ["creator", "administrator"]
+    except Exception:
+        return False
+
 async def cmd_start(update: Update, context: ContextTypes.DEFAULT_TYPE):
     await update.message.reply_text(
         "🤖 你好，我是财务记账机器人。\n"
@@ -204,9 +215,15 @@ async def handle_text(update: Update, context: ContextTypes.DEFAULT_TYPE):
             for a in lst: lines.append(f"- [ID {a}](tg://user?id={a})")
             await update.message.reply_text("\n".join(lines), parse_mode="Markdown")
             return
-        if not is_admin(user.id):
-            await update.message.reply_text("🚫 你没有权限设置机器人管理员。")
+        
+        # 检查权限：机器人管理员或群组管理员/群主
+        is_bot_admin = is_admin(user.id)
+        is_chat_admin = await is_group_admin(update, context, user.id)
+        
+        if not is_bot_admin and not is_chat_admin:
+            await update.message.reply_text("🚫 你没有权限设置机器人管理员。\n💡 只有机器人管理员或群主/群管理员可以执行此操作。")
             return
+        
         if not update.message.reply_to_message:
             await update.message.reply_text("请『回复』要授权或移除的用户消息再发送此命令。")
             return
