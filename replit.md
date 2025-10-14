@@ -42,11 +42,19 @@ Or update the workflow configuration to run your preferred script.
 ## Recent Changes
 - 2025-10-14: Initial project setup with Python 3.11
 - Created basic structure with main.py and requirements.txt
-- Added Telegram bot (bot.py) with pyTelegramBotAPI library
-- Configured TELEGRAM_BOT_TOKEN in environment variables
-- Created README.md with Telegram bot usage instructions
+- Replaced with advanced finance bot using python-telegram-bot library
+- Installed Flask, python-dotenv dependencies
+- Configured workflow to run bot.py on port 5000
+- Created comprehensive README.md for finance bot
 
 ## User Preferences
 - Manual control over code execution and library installation
-- Simple, straightforward Python environment
 - Chinese language interface for documentation
+- Financial tracking bot for Telegram
+
+## Bot Features
+- Finance tracking with in/out transactions
+- USDT conversion with custom rates and exchange rates
+- Admin system with permission management
+- Data persistence with JSON files
+- HTTP keepalive server on port 5000
