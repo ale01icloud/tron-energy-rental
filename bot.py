@@ -16,7 +16,8 @@ def ok():
     return "ok", 200
 
 def run_http():
-    app.run(host="0.0.0.0", port=int(os.getenv("PORT", "5000")))
+    port = int(os.getenv("PORT", "5000"))
+    app.run(host="0.0.0.0", port=port, use_reloader=False)
 
 # ========== 记账核心状态 ==========
 DATA_DIR = Path("./data")
@@ -271,9 +272,28 @@ async def handle_text(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
 # ========== 启动 ==========
 if __name__ == "__main__":
+    print("=" * 50)
+    print("🚀 正在启动财务记账机器人...")
+    print("=" * 50)
+    
+    if not BOT_TOKEN:
+        print("❌ 错误：未找到 TELEGRAM_BOT_TOKEN 环境变量")
+        exit(1)
+    
+    print("✅ Bot Token 已加载")
+    print(f"📊 数据目录: {DATA_DIR}")
+    print(f"👑 超级管理员: {OWNER_ID or '未设置'}")
+    
+    print("\n🌐 启动 HTTP 保活服务器...")
     threading.Thread(target=run_http, daemon=True).start()
+    print("✅ HTTP 服务器已启动（后台运行）")
+    
+    print("\n🤖 启动 Telegram Bot...")
     from telegram.ext import ApplicationBuilder
     appbot = ApplicationBuilder().token(BOT_TOKEN).build()
     appbot.add_handler(CommandHandler("start", cmd_start))
     appbot.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, handle_text))
+    print("✅ Bot 处理器已注册")
+    print("\n🎉 机器人正在运行，等待消息...")
+    print("=" * 50)
     appbot.run_polling()
