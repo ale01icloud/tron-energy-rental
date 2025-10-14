@@ -42,7 +42,11 @@ Or update the workflow configuration to run your preferred script.
 ## Recent Changes
 - 2025-10-14: Initial project setup with Python 3.11
 - Created basic structure with main.py and requirements.txt
+- Added Telegram bot (bot.py) with pyTelegramBotAPI library
+- Configured TELEGRAM_BOT_TOKEN in environment variables
+- Created README.md with Telegram bot usage instructions
 
 ## User Preferences
 - Manual control over code execution and library installation
 - Simple, straightforward Python environment
+- Chinese language interface for documentation
