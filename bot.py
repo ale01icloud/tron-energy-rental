@@ -526,16 +526,21 @@ async def handle_text(update: Update, context: ContextTypes.DEFAULT_TYPE):
         if not is_admin(user.id):
             return  # 非管理员不回复
         tokens = text.split()
+        if len(tokens) < 3:  # 需要至少：设置 国家 值
+            return  # 格式不正确，忽略
         scope = tokens[1]
         direction = "in" if "入" in text else "out"
         key = "rate" if "费率" in text else "fx"
-        val = float(tokens[-1])
-        if key == "rate": val /= 100.0
-        if scope == "默认": state["defaults"][direction][key] = val
-        else:
-            state["countries"].setdefault(scope, {}).setdefault(direction, {})[key] = val
-        save_state()
-        await update.message.reply_text(f"✅ 已设置 {scope} {direction} {key} = {val}", parse_mode="Markdown")
+        try:
+            val = float(tokens[-1])
+            if key == "rate": val /= 100.0
+            if scope == "默认": state["defaults"][direction][key] = val
+            else:
+                state["countries"].setdefault(scope, {}).setdefault(direction, {})[key] = val
+            save_state()
+            await update.message.reply_text(f"✅ 已设置 {scope} {direction} {key} = {val}", parse_mode="Markdown")
+        except ValueError:
+            return  # 无效数字，忽略
         return
 
     # 入金
