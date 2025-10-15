@@ -10,31 +10,15 @@ load_dotenv()
 BOT_TOKEN = os.getenv("TELEGRAM_BOT_TOKEN")
 OWNER_ID  = os.getenv("OWNER_ID")  # 可选：你的 Telegram ID（字符串），拥有永久管理员权限
 
-# ========== Flask应用 + Webhook ==========
+# ========== Flask应用（用于健康检查和保活）==========
 app = Flask(__name__)
 
-# 全局bot application对象
-bot_app = None
-
 @app.get("/")
-def ok():
+def health_check():
     return "AA全球国际支付机器人正在运行", 200
 
-@app.post(f"/{BOT_TOKEN}")
-def webhook():
-    """处理Telegram webhook请求"""
-    import asyncio
-    from telegram import Update
-    
-    if bot_app:
-        try:
-            update_data = request.get_json()
-            update = Update.de_json(update_data, bot_app.bot)
-            # 在新的事件循环中处理更新
-            asyncio.run(bot_app.process_update(update))
-        except Exception as e:
-            print(f"Webhook处理错误: {e}")
-            return "error", 500
+@app.get("/health")
+def health():
     return "ok", 200
 
 # ========== 记账核心状态（多群组支持）==========
@@ -825,38 +809,45 @@ if __name__ == "__main__":
     
     print("\n🤖 配置 Telegram Bot...")
     from telegram.ext import ApplicationBuilder
-    bot_app = ApplicationBuilder().token(BOT_TOKEN).build()
-    bot_app.add_handler(CommandHandler("start", cmd_start))
-    bot_app.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, handle_text))
-    print("✅ Bot 处理器已注册")
     
     if USE_WEBHOOK and RENDER_EXTERNAL_URL:
         # Webhook模式（Render Web Service）
         webhook_url = f"{RENDER_EXTERNAL_URL}/{BOT_TOKEN}"
+        port = int(os.getenv("PORT", "10000"))  # Render默认端口
+        
         print(f"\n🌐 使用 Webhook 模式")
         print(f"📡 Webhook URL: {webhook_url}")
+        print(f"🔌 监听端口: {port}")
         
-        # 在后台线程设置webhook
-        def setup_webhook():
-            import time
-            time.sleep(3)  # 等待Flask启动
-            try:
-                import asyncio
-                asyncio.run(bot_app.bot.set_webhook(webhook_url))
-                print("✅ Webhook 设置成功")
-            except Exception as e:
-                print(f"⚠️ Webhook 设置失败: {e}")
+        # 使用python-telegram-bot的webhook模式
+        application = (
+            ApplicationBuilder()
+            .token(BOT_TOKEN)
+            .build()
+        )
         
-        threading.Thread(target=setup_webhook, daemon=True).start()
+        application.add_handler(CommandHandler("start", cmd_start))
+        application.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, handle_text))
+        print("✅ Bot 处理器已注册")
         
-        # 启动Flask服务器（主进程）
-        port = int(os.getenv("PORT", "5000"))
-        print(f"\n🚀 启动 Flask 服务器 (端口 {port})...")
+        # 启动webhook模式（内置HTTP服务器）
+        print(f"\n🚀 启动 Webhook 服务...")
         print("=" * 50)
-        app.run(host="0.0.0.0", port=port, use_reloader=False)
+        application.run_webhook(
+            listen="0.0.0.0",
+            port=port,  # 使用Render的PORT
+            url_path=BOT_TOKEN,
+            webhook_url=webhook_url,
+        )
     else:
         # Polling模式（本地开发/Replit）
         print("\n🔄 使用 Polling 模式（本地开发）")
+        
+        application = ApplicationBuilder().token(BOT_TOKEN).build()
+        application.add_handler(CommandHandler("start", cmd_start))
+        application.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, handle_text))
+        print("✅ Bot 处理器已注册")
+        
         print("\n🌐 启动 HTTP 保活服务器...")
         def run_http():
             port = int(os.getenv("PORT", "5000"))
@@ -865,4 +856,4 @@ if __name__ == "__main__":
         print("✅ HTTP 服务器已启动（后台运行）")
         print("\n🎉 机器人正在运行，等待消息...")
         print("=" * 50)
-        bot_app.run_polling()
+        application.run_polling()
