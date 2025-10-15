@@ -819,6 +819,21 @@ if __name__ == "__main__":
         print(f"📡 Webhook URL: {webhook_url}")
         print(f"🔌 监听端口: {port}")
         
+        # 自动保活机制 - 每10分钟ping一次自己防止休眠
+        def keep_alive():
+            import time
+            health_url = f"{RENDER_EXTERNAL_URL}/health"
+            while True:
+                time.sleep(600)  # 每10分钟
+                try:
+                    requests.get(health_url, timeout=5)
+                    print(f"💓 保活ping成功: {datetime.datetime.now().strftime('%H:%M:%S')}")
+                except Exception as e:
+                    print(f"⚠️ 保活ping失败: {e}")
+        
+        threading.Thread(target=keep_alive, daemon=True).start()
+        print("✅ 自动保活机制已启动（每10分钟ping一次）")
+        
         # 使用python-telegram-bot的webhook模式
         application = (
             ApplicationBuilder()

@@ -65,9 +65,14 @@
 - 💡 建议：升级到Starter计划（$7/月）保持24/7运行
 
 ### 保持运行（使用免费计划）
-如果使用免费计划，可以设置外部定时ping：
+✅ **已内置自动保活机制**
+- 代码已自动集成每10分钟自我ping功能
+- 无需额外配置，部署后自动防止休眠
+- 在日志中可以看到"💓 保活ping成功"消息
+
+**备用方案**（如内置保活失效）：
 1. 使用UptimeRobot等服务每10分钟ping一次您的服务
-2. URL: `https://your-app-name.onrender.com`
+2. URL: `https://your-app-name.onrender.com/health`
 
 ### 数据持久化
 - ⚠️ Render免费计划不提供持久存储
