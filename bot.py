@@ -218,15 +218,36 @@ def render_group_summary(chat_id: int) -> str:
     lines = []
     lines.append(f"📊【{bot} 账单汇总】\n")
     lines.append(f"📥 入金记录（最近5笔，共{len(rec_in)}笔）")
-    lines += [f"🕐 {r['ts']}　+{r['raw']} → {fmt_usdt(trunc2(r['usdt']))}" for r in rec_in[:5]] or ["（暂无）"]
+    
+    # 入金记录：如果有国家，显示国家名（只取前2个字符）替换箭头
+    in_lines = []
+    for r in rec_in[:5]:
+        country = r.get('country')
+        if country:
+            country_display = country[:2]  # 只显示前2个字符
+            in_lines.append(f"🕐 {r['ts']}　+{r['raw']} {country_display} {fmt_usdt(trunc2(r['usdt']))}")
+        else:
+            in_lines.append(f"🕐 {r['ts']}　+{r['raw']} → {fmt_usdt(trunc2(r['usdt']))}")
+    lines += in_lines or ["（暂无）"]
+    
     lines.append("")
     lines.append(f"📤 出金记录（最近5笔，共{len(rec_out)}笔）")
-    lines += [
-        f"🕐 {r['ts']}　下发 {fmt_usdt(trunc2(r['usdt']))}" if r.get('type') == '下发' 
-        else f"🕐 {r['ts']}　-{r.get('raw', 0)} → {fmt_usdt(trunc2(r['usdt']))}" if 'raw' in r 
-        else f"🕐 {r['ts']}　{fmt_usdt(trunc2(r['usdt']))}" 
-        for r in rec_out[:5]
-    ] or ["（暂无）"]
+    
+    # 出金记录：同样处理国家显示
+    out_lines = []
+    for r in rec_out[:5]:
+        if r.get('type') == '下发':
+            out_lines.append(f"🕐 {r['ts']}　下发 {fmt_usdt(trunc2(r['usdt']))}")
+        elif 'raw' in r:
+            country = r.get('country')
+            if country:
+                country_display = country[:2]
+                out_lines.append(f"🕐 {r['ts']}　-{r['raw']} {country_display} {fmt_usdt(trunc2(r['usdt']))}")
+            else:
+                out_lines.append(f"🕐 {r['ts']}　-{r['raw']} → {fmt_usdt(trunc2(r['usdt']))}")
+        else:
+            out_lines.append(f"🕐 {r['ts']}　{fmt_usdt(trunc2(r['usdt']))}")
+    lines += out_lines or ["（暂无）"]
     lines.append("")
     lines.append("━━━━━━━━━━━━━━")
     lines.append(f"⚙️ 当前费率：入 {rin*100:.0f}% ⇄ 出 {rout*100:.0f}%")
@@ -252,19 +273,31 @@ def render_full_summary(chat_id: int) -> str:
     lines.append(f"📊【{bot} 完整账单】\n")
     lines.append(f"📥 入金记录（共{len(rec_in)}笔）")
     if rec_in:
-        lines += [f"🕐 {r['ts']}　+{r['raw']} → {fmt_usdt(trunc2(r['usdt']))}" for r in rec_in]
+        for r in rec_in:
+            country = r.get('country')
+            if country:
+                country_display = country[:2]
+                lines.append(f"🕐 {r['ts']}　+{r['raw']} {country_display} {fmt_usdt(trunc2(r['usdt']))}")
+            else:
+                lines.append(f"🕐 {r['ts']}　+{r['raw']} → {fmt_usdt(trunc2(r['usdt']))}")
     else:
         lines.append("（暂无）")
     
     lines.append("")
     lines.append(f"📤 出金记录（共{len(rec_out)}笔）")
     if rec_out:
-        lines += [
-            f"🕐 {r['ts']}　下发 {fmt_usdt(trunc2(r['usdt']))}" if r.get('type') == '下发' 
-            else f"🕐 {r['ts']}　-{r.get('raw', 0)} → {fmt_usdt(trunc2(r['usdt']))}" if 'raw' in r 
-            else f"🕐 {r['ts']}　{fmt_usdt(trunc2(r['usdt']))}" 
-            for r in rec_out
-        ]
+        for r in rec_out:
+            if r.get('type') == '下发':
+                lines.append(f"🕐 {r['ts']}　下发 {fmt_usdt(trunc2(r['usdt']))}")
+            elif 'raw' in r:
+                country = r.get('country')
+                if country:
+                    country_display = country[:2]
+                    lines.append(f"🕐 {r['ts']}　-{r['raw']} {country_display} {fmt_usdt(trunc2(r['usdt']))}")
+                else:
+                    lines.append(f"🕐 {r['ts']}　-{r['raw']} → {fmt_usdt(trunc2(r['usdt']))}")
+            else:
+                lines.append(f"🕐 {r['ts']}　{fmt_usdt(trunc2(r['usdt']))}")
     else:
         lines.append("（暂无）")
     
@@ -627,7 +660,7 @@ async def handle_text(update: Update, context: ContextTypes.DEFAULT_TYPE):
         amt, country = parse_amount_and_country(text)
         p = resolve_params(chat_id, "in", country)
         usdt = trunc2(amt * (1 - p["rate"]) / p["fx"])
-        push_recent(chat_id, "in", {"ts": ts, "raw": amt, "usdt": usdt})
+        push_recent(chat_id, "in", {"ts": ts, "raw": amt, "usdt": usdt, "country": country})
         state["summary"]["should_send_usdt"] = trunc2(state["summary"]["should_send_usdt"] + usdt)
         save_group_state(chat_id)
         append_log(log_path(chat_id, country, dstr),
@@ -642,7 +675,7 @@ async def handle_text(update: Update, context: ContextTypes.DEFAULT_TYPE):
         amt, country = parse_amount_and_country(text)
         p = resolve_params(chat_id, "out", country)
         usdt = trunc2(amt * (1 + p["rate"]) / p["fx"])
-        push_recent(chat_id, "out", {"ts": ts, "raw": amt, "usdt": usdt})
+        push_recent(chat_id, "out", {"ts": ts, "raw": amt, "usdt": usdt, "country": country})
         state["summary"]["sent_usdt"] = trunc2(state["summary"]["sent_usdt"] + usdt)
         save_group_state(chat_id)
         append_log(log_path(chat_id, country, dstr),
