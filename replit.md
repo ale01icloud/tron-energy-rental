@@ -46,15 +46,26 @@ Or update the workflow configuration to run your preferred script.
 - Installed Flask, python-dotenv dependencies
 - Configured workflow to run bot.py on port 5000
 - Created comprehensive README.md for finance bot
+- 2025-10-15: Implemented multi-group support - each group has independent accounting data
+- Refactored data structure to use per-group state management
+- Added group-specific log directories (data/logs/group_<chat_id>/)
+- Removed OKX exchange rate query feature
 
 ## User Preferences
 - Manual control over code execution and library installation
 - Chinese language interface for documentation
 - Financial tracking bot for Telegram
+- **Important**: Each Telegram group has completely independent accounting data
 
 ## Bot Features
 - Finance tracking with in/out transactions
 - USDT conversion with custom rates and exchange rates
 - Admin system with permission management
-- Data persistence with JSON files
+- **Multi-group support**: Each group maintains independent:
+  - Transaction records (入金/出金)
+  - USDT summary (应下发/已下发)
+  - Rate and exchange settings
+  - Daily reset schedule
+  - Transaction logs
+- Data persistence with per-group JSON files (data/groups/group_<chat_id>.json)
 - HTTP keepalive server on port 5000
