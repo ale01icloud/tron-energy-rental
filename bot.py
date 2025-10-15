@@ -10,8 +10,12 @@ load_dotenv()
 BOT_TOKEN = os.getenv("TELEGRAM_BOT_TOKEN")
 OWNER_ID  = os.getenv("OWNER_ID")  # 可选：你的 Telegram ID（字符串），拥有永久管理员权限
 
-# ========== Flask应用（用于健康检查和保活）==========
+# ========== Flask应用（用于健康检查和Webhook）==========
 app = Flask(__name__)
+
+# 全局bot application对象（在webhook模式下会被设置）
+class BotContainer:
+    application = None
 
 @app.get("/")
 def health_check():
@@ -20,6 +24,32 @@ def health_check():
 @app.get("/health")
 def health():
     return "ok", 200
+
+@app.post("/<token>")
+def webhook(token):
+    """处理Telegram webhook请求"""
+    if token != BOT_TOKEN or not BotContainer.application:
+        return "Unauthorized", 401
+    
+    try:
+        from telegram import Update
+        import asyncio
+        
+        # 获取更新数据
+        update_data = request.get_json(force=True)
+        update = Update.de_json(update_data, BotContainer.application.bot)
+        
+        # 在新线程中异步处理
+        def process():
+            asyncio.run(BotContainer.application.process_update(update))
+        
+        threading.Thread(target=process).start()
+        return "ok", 200
+    except Exception as e:
+        print(f"Webhook错误: {e}")
+        import traceback
+        traceback.print_exc()
+        return "error", 500
 
 # ========== 记账核心状态（多群组支持）==========
 DATA_DIR = Path("./data")
@@ -819,9 +849,27 @@ if __name__ == "__main__":
         print(f"📡 Webhook URL: {webhook_url}")
         print(f"🔌 监听端口: {port}")
         
+        # 创建bot application
+        BotContainer.application = ApplicationBuilder().token(BOT_TOKEN).build()
+        BotContainer.application.add_handler(CommandHandler("start", cmd_start))
+        BotContainer.application.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, handle_text))
+        print("✅ Bot 处理器已注册")
+        
+        # 初始化bot（必须）
+        import asyncio
+        loop = asyncio.new_event_loop()
+        asyncio.set_event_loop(loop)
+        loop.run_until_complete(BotContainer.application.initialize())
+        loop.run_until_complete(BotContainer.application.start())
+        
+        # 设置webhook
+        loop.run_until_complete(BotContainer.application.bot.set_webhook(webhook_url))
+        print("✅ Webhook 设置成功")
+        
         # 自动保活机制 - 每10分钟ping一次自己防止休眠
         def keep_alive():
             import time
+            time.sleep(30)  # 等待启动
             health_url = f"{RENDER_EXTERNAL_URL}/health"
             while True:
                 time.sleep(600)  # 每10分钟
@@ -834,26 +882,10 @@ if __name__ == "__main__":
         threading.Thread(target=keep_alive, daemon=True).start()
         print("✅ 自动保活机制已启动（每10分钟ping一次）")
         
-        # 使用python-telegram-bot的webhook模式
-        application = (
-            ApplicationBuilder()
-            .token(BOT_TOKEN)
-            .build()
-        )
-        
-        application.add_handler(CommandHandler("start", cmd_start))
-        application.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, handle_text))
-        print("✅ Bot 处理器已注册")
-        
-        # 启动webhook模式（内置HTTP服务器）
-        print(f"\n🚀 启动 Webhook 服务...")
+        # 启动Flask服务器（主进程）
+        print(f"\n🚀 启动 Flask 服务器...")
         print("=" * 50)
-        application.run_webhook(
-            listen="0.0.0.0",
-            port=port,  # 使用Render的PORT
-            url_path=BOT_TOKEN,
-            webhook_url=webhook_url,
-        )
+        app.run(host="0.0.0.0", port=port, use_reloader=False, threaded=True)
     else:
         # Polling模式（本地开发/Replit）
         print("\n🔄 使用 Polling 模式（本地开发）")
