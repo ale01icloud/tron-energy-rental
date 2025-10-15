@@ -54,6 +54,10 @@ Or update the workflow configuration to run your preferred script.
   - Added dual-mode support: Polling (Replit) + Webhook (Render Web Service)
   - Code now supports both local development and production deployment
   - Successfully uploaded project to GitHub: lea499579-stack/telegram-finance-bot
+  - Fixed webhook async event loop handling using run_coroutine_threadsafe
+  - Fixed Python version compatibility (3.11.9) in render.yaml and .python-version
+  - Enhanced webhook setup with validation, error handling, and verification
+  - Added webhook URL validation to prevent empty webhook registration
 
 ## User Preferences
 - Manual control over code execution and library installation

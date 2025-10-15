@@ -837,15 +837,31 @@ if __name__ == "__main__":
     
     # 检查运行模式
     USE_WEBHOOK = os.getenv("USE_WEBHOOK", "false").lower() == "true"
-    RENDER_EXTERNAL_URL = os.getenv("RENDER_EXTERNAL_URL")  # Render自动提供
     
     print("\n🤖 配置 Telegram Bot...")
     from telegram.ext import ApplicationBuilder
     
-    if USE_WEBHOOK and RENDER_EXTERNAL_URL:
+    if USE_WEBHOOK:
         # Webhook模式（Render Web Service）
-        webhook_url = f"{RENDER_EXTERNAL_URL}/{BOT_TOKEN}"
+        # 优先使用手动配置的WEBHOOK_URL，否则使用Render自动提供的RENDER_EXTERNAL_URL
+        base_url = os.getenv("WEBHOOK_URL") or os.getenv("RENDER_EXTERNAL_URL")
+        
+        if not base_url:
+            print("❌ 错误：Webhook模式需要设置以下环境变量之一：")
+            print("   1. WEBHOOK_URL - 手动设置webhook地址（推荐）")
+            print("   2. RENDER_EXTERNAL_URL - Render自动提供")
+            print("\n请在Render Dashboard → Environment中添加：")
+            print("   WEBHOOK_URL = https://你的服务名.onrender.com")
+            exit(1)
+        
+        webhook_url = f"{base_url}/{BOT_TOKEN}"
         port = int(os.getenv("PORT", "10000"))  # Render默认端口
+        
+        # 验证webhook URL
+        if not webhook_url.startswith("https://"):
+            print(f"❌ 错误：Webhook URL必须使用HTTPS: {webhook_url}")
+            print(f"   BASE_URL: {base_url}")
+            exit(1)
         
         print(f"\n🌐 使用 Webhook 模式")
         print(f"📡 Webhook URL: {webhook_url}")
@@ -861,20 +877,41 @@ if __name__ == "__main__":
         def setup_webhook():
             import asyncio
             import time
-            time.sleep(2)  # 等待Flask启动
+            time.sleep(3)  # 等待Flask启动
             
             async def set_webhook():
-                async with BotContainer.application:
-                    # 存储事件循环供webhook使用
-                    BotContainer.loop = asyncio.get_running_loop()
-                    
-                    await BotContainer.application.bot.set_webhook(webhook_url)
-                    print("✅ Webhook 设置成功")
-                    # 保持application运行
-                    await BotContainer.application.start()
-                    print("✅ Bot application已启动")
-                    # 保持事件循环运行
-                    await asyncio.Event().wait()
+                try:
+                    async with BotContainer.application:
+                        # 存储事件循环供webhook使用
+                        BotContainer.loop = asyncio.get_running_loop()
+                        print("✅ Bot事件循环已创建")
+                        
+                        # 先删除旧webhook
+                        await BotContainer.application.bot.delete_webhook(drop_pending_updates=True)
+                        print("🗑️ 已清除旧webhook")
+                        
+                        # 设置新webhook
+                        success = await BotContainer.application.bot.set_webhook(
+                            url=webhook_url,
+                            drop_pending_updates=False,
+                            allowed_updates=["message"]
+                        )
+                        print(f"✅ Webhook设置{'成功' if success else '失败'}: {webhook_url}")
+                        
+                        # 验证webhook
+                        info = await BotContainer.application.bot.get_webhook_info()
+                        print(f"📡 Webhook状态: URL={info.url}, 待处理={info.pending_update_count}")
+                        
+                        # 保持application运行
+                        await BotContainer.application.start()
+                        print("✅ Bot application已启动")
+                        
+                        # 保持事件循环运行
+                        await asyncio.Event().wait()
+                except Exception as e:
+                    print(f"❌ Webhook设置错误: {e}")
+                    import traceback
+                    traceback.print_exc()
             
             asyncio.run(set_webhook())
         
