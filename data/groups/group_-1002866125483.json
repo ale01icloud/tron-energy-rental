@@ -37,6 +37,12 @@
   "recent": {
     "in": [
       {
+        "ts": "18:56",
+        "raw": 1000.0,
+        "usdt": 6.2,
+        "country": "日本"
+      },
+      {
         "ts": "18:55",
         "raw": 1000.0,
         "usdt": 465.0,
@@ -92,7 +98,7 @@
     "out": []
   },
   "summary": {
-    "should_send_usdt": 3282.39,
+    "should_send_usdt": 3288.59,
     "sent_usdt": 0.0
   },
   "last_date": "2025-10-15"

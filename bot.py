@@ -549,6 +549,75 @@ async def handle_text(update: Update, context: ContextTypes.DEFAULT_TYPE):
             await update.message.reply_text(f"🗑️ 已移除 {target.mention_html()} 的机器人管理员权限。", parse_mode="HTML")
         return
 
+    # 查询国家点位（费率/汇率）
+    if text.endswith("当前点位"):
+        if not is_admin(user.id):
+            return  # 非管理员不回复
+        
+        # 提取国家名（去掉"当前点位"）
+        country = text.replace("当前点位", "").strip()
+        
+        if not country:
+            await update.message.reply_text("❌ 请指定国家名称\n例如：美国当前点位")
+            return
+        
+        # 获取该国家的费率和汇率
+        countries = state["countries"]
+        defaults = state["defaults"]
+        
+        # 查询入金费率和汇率
+        in_rate = None
+        in_fx = None
+        if country in countries and "in" in countries[country]:
+            in_rate = countries[country]["in"].get("rate")
+            in_fx = countries[country]["in"].get("fx")
+        
+        # 如果没有专属设置，使用默认值
+        if in_rate is None:
+            in_rate = defaults["in"]["rate"]
+            in_rate_source = "默认"
+        else:
+            in_rate_source = f"{country}专属"
+            
+        if in_fx is None:
+            in_fx = defaults["in"]["fx"]
+            in_fx_source = "默认"
+        else:
+            in_fx_source = f"{country}专属"
+        
+        # 查询出金费率和汇率
+        out_rate = None
+        out_fx = None
+        if country in countries and "out" in countries[country]:
+            out_rate = countries[country]["out"].get("rate")
+            out_fx = countries[country]["out"].get("fx")
+        
+        if out_rate is None:
+            out_rate = defaults["out"]["rate"]
+            out_rate_source = "默认"
+        else:
+            out_rate_source = f"{country}专属"
+            
+        if out_fx is None:
+            out_fx = defaults["out"]["fx"]
+            out_fx_source = "默认"
+        else:
+            out_fx_source = f"{country}专属"
+        
+        # 构建回复消息
+        lines = [
+            f"📍【{country} 当前点位】\n",
+            f"📥 入金设置：",
+            f"  • 费率：{in_rate*100:.0f}% ({in_rate_source})",
+            f"  • 汇率：{in_fx} ({in_fx_source})\n",
+            f"📤 出金设置：",
+            f"  • 费率：{abs(out_rate)*100:.0f}% ({out_rate_source})",
+            f"  • 汇率：{out_fx} ({out_fx_source})"
+        ]
+        
+        await update.message.reply_text("\n".join(lines))
+        return
+    
     # 简化的设置命令
     if text.startswith(("设置入金费率", "设置入金汇率", "设置出金费率", "设置出金汇率")):
         if not is_admin(user.id):
