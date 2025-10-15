@@ -147,126 +147,6 @@ def parse_amount_and_country(text: str):
     country = m2.group(1) if m2 else None
     return amount, country
 
-def get_okx_rate():
-    """获取欧易(OKX) USDT 参考价格（通过USDT/USDC计算CNY价格）"""
-    try:
-        # 方法1：尝试获取USDT-USDC的价格，然后用USDC-CNY计算
-        # 方法2：直接从P2P市场获取参考价
-        
-        # 先尝试获取index ticker（指数价格）
-        url = "https://www.okx.com/api/v5/market/index-tickers"
-        params = {"instId": "USDT-USD"}
-        
-        response = requests.get(url, params=params, timeout=5)
-        data = response.json()
-        
-        if data.get("code") == "0" and data.get("data"):
-            # 获取到USD价格，假设USD/CNY约为7.2
-            usd_price = float(data["data"][0]["idxPx"])
-            cny_price = usd_price * 7.2  # 美元兑人民币汇率约7.2
-            
-            return {
-                "success": True,
-                "last": cny_price,
-                "high": cny_price,
-                "low": cny_price,
-                "volume": 0,
-                "source": "估算"
-            }
-        
-        # 如果失败，返回默认参考价
-        return {
-            "success": True,
-            "last": 7.15,
-            "high": 7.20,
-            "low": 7.10,
-            "volume": 0,
-            "source": "参考"
-        }
-    except Exception as e:
-        # 返回默认参考价
-        return {
-            "success": True,
-            "last": 7.15,
-            "high": 7.20,
-            "low": 7.10,
-            "volume": 0,
-            "source": "参考"
-        }
-
-def get_okx_p2p_prices():
-    """获取欧易P2P市场排名靠前的U商价格（模拟数据）"""
-    try:
-        headers = {
-            "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36",
-            "Accept": "application/json",
-            "Content-Type": "application/json",
-            "App-Type": "web"
-        }
-        
-        result = {
-            "success": True,
-            "buy_prices": [],  # 用户买入价格
-            "sell_prices": []  # 用户卖出价格
-        }
-        
-        # 尝试新的API端点
-        try:
-            # 买入USDT（用户视角）
-            buy_url = "https://www.okx.com/v3/c2c/tradingOrders/books"
-            buy_payload = {
-                "quoteCurrency": "cny",
-                "baseCurrency": "usdt",
-                "side": "sell",
-                "paymentMethod": "all",
-                "userType": "certified",
-                "hideOverseasMerchant": False,
-                "quoteMinAmountPerOrder": 100,
-                "quoteMaxAmountPerOrder": 500000,
-                "limit": 10
-            }
-            
-            buy_resp = requests.post(buy_url, json=buy_payload, headers=headers, timeout=5)
-            if buy_resp.status_code == 200:
-                buy_data = buy_resp.json()
-                if buy_data.get("data") and buy_data["data"].get("sell"):
-                    for ad in buy_data["data"]["sell"][:10]:
-                        result["buy_prices"].append({
-                            "price": float(ad.get("price", 0)),
-                            "merchant": ad.get("nickName", "商家")[:12]
-                        })
-            
-            # 卖出USDT（用户视角）
-            sell_payload = buy_payload.copy()
-            sell_payload["side"] = "buy"
-            
-            sell_resp = requests.post(buy_url, json=sell_payload, headers=headers, timeout=5)
-            if sell_resp.status_code == 200:
-                sell_data = sell_resp.json()
-                if sell_data.get("data") and sell_data["data"].get("buy"):
-                    for ad in sell_data["data"]["buy"][:10]:
-                        result["sell_prices"].append({
-                            "price": float(ad.get("price", 0)),
-                            "merchant": ad.get("nickName", "商家")[:12]
-                        })
-            
-            if result["buy_prices"] or result["sell_prices"]:
-                return result
-        except:
-            pass
-        
-        # 如果API失败，返回参考价格说明
-        return {
-            "success": False,
-            "error": "P2P API暂时无法访问，请访问 okx.com/p2p-markets/cny/buy-usdt 查看实时商家价格"
-        }
-        
-    except Exception as e:
-        return {
-            "success": False,
-            "error": "P2P API暂时无法访问，请访问 okx.com/p2p-markets/cny/buy-usdt 查看实时商家价格"
-        }
-
 # ========== 管理员系统 ==========
 def is_admin(user_id: int) -> bool:
     if OWNER_ID and OWNER_ID.isdigit() and int(OWNER_ID) == user_id:
@@ -392,8 +272,6 @@ async def cmd_start(update: Update, context: ContextTypes.DEFAULT_TYPE):
                 "  入金：+10000 或 +10000 / 日本\n"
                 "  出金：-10000 或 -10000 / 日本\n"
                 "  查看账单：+0 或 更多记录\n\n"
-                "💹 查询汇率：\n"
-                "  z0 或 Z0 - 查询欧易现货+P2P商家价格\n\n"
                 "💰 USDT下发（仅管理员）：\n"
                 "  下发35.04（记录下发并扣除应下发）\n"
                 "  下发-35.04（撤销下发并增加应下发）\n\n"
@@ -458,8 +336,6 @@ async def cmd_start(update: Update, context: ContextTypes.DEFAULT_TYPE):
             "  入金：+10000 或 +10000 / 日本\n"
             "  出金：-10000 或 -10000 / 日本\n"
             "  查看账单：+0 或 更多记录\n\n"
-            "💹 查询汇率：\n"
-            "  z0 或 Z0 - 查询欧易现货+P2P商家价格\n\n"
             "💰 USDT下发（仅管理员）：\n"
             "  下发35.04（记录下发并扣除应下发）\n"
             "  下发-35.04（撤销下发并增加应下发）\n\n"
@@ -487,46 +363,6 @@ async def handle_text(update: Update, context: ContextTypes.DEFAULT_TYPE):
     
     # 检查日期并在需要时重置账单
     check_and_reset_daily()
-    
-    # 查询欧易实时汇率
-    if text.lower() == "z0":
-        # 获取现货汇率
-        rate_data = get_okx_rate()
-        # 获取P2P商家价格
-        p2p_data = get_okx_p2p_prices()
-        
-        message_lines = ["💹 欧易(OKX) USDT/CNY 实时行情\n"]
-        
-        # 显示现货价格
-        if rate_data["success"]:
-            message_lines.append("📊 现货市场：")
-            message_lines.append(f"  💰 当前价格：¥{rate_data['last']:.2f}")
-            message_lines.append(f"  📈 24h最高：¥{rate_data['high']:.2f}")
-            message_lines.append(f"  📉 24h最低：¥{rate_data['low']:.2f}\n")
-        
-        # 显示P2P商家价格
-        if p2p_data["success"]:
-            # 买入价格（用户买USDT）
-            if p2p_data["buy_prices"]:
-                message_lines.append("🛒 买入USDT商家实时汇率 TOP10：")
-                for i, ad in enumerate(p2p_data["buy_prices"][:10], 1):
-                    message_lines.append(f"{i}) {ad['price']:.2f}   {ad['merchant']}")
-                message_lines.append("")
-            
-            # 卖出价格（用户卖USDT）
-            if p2p_data["sell_prices"]:
-                message_lines.append("💵 卖出USDT商家实时汇率 TOP10：")
-                for i, ad in enumerate(p2p_data["sell_prices"][:10], 1):
-                    message_lines.append(f"{i}) {ad['price']:.2f}   {ad['merchant']}")
-                message_lines.append("")
-        else:
-            message_lines.append(f"⚠️ P2P数据：{p2p_data['error']}\n")
-        
-        message_lines.append(f"🕐 更新时间：{ts}")
-        message = "\n".join(message_lines)
-        
-        await update.message.reply_text(message)
-        return
     
     # 撤销操作（回复机器人消息 + 任意文本）
     if update.message.reply_to_message and update.message.reply_to_message.from_user.is_bot:
