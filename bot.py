@@ -97,7 +97,9 @@ admins_cache = load_admins()
 
 # ========== 工具函数 ==========
 def trunc2(x: float) -> float:
-    return math.floor(x * 100.0) / 100.0  # 截断两位小数（不四舍五入）
+    # 先四舍五入到6位小数消除浮点误差，再截断到2位小数
+    rounded = round(x, 6)
+    return math.floor(rounded * 100.0) / 100.0
 
 def fmt_usdt(x: float) -> str:
     return f"{x:.2f} USDT"
