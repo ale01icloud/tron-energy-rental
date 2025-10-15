@@ -46,10 +46,14 @@ Or update the workflow configuration to run your preferred script.
 - Installed Flask, python-dotenv dependencies
 - Configured workflow to run bot.py on port 5000
 - Created comprehensive README.md for finance bot
-- 2025-10-15: Implemented multi-group support - each group has independent accounting data
-- Refactored data structure to use per-group state management
-- Added group-specific log directories (data/logs/group_<chat_id>/)
-- Removed OKX exchange rate query feature
+- 2025-10-15: 
+  - Implemented multi-group support - each group has independent accounting data
+  - Refactored data structure to use per-group state management
+  - Added group-specific log directories (data/logs/group_<chat_id>/)
+  - Removed OKX exchange rate query feature
+  - Added dual-mode support: Polling (Replit) + Webhook (Render Web Service)
+  - Code now supports both local development and production deployment
+  - Successfully uploaded project to GitHub: lea499579-stack/telegram-finance-bot
 
 ## User Preferences
 - Manual control over code execution and library installation

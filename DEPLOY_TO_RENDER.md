@@ -46,6 +46,8 @@
    - 在"Environment"标签下添加：
      - Key: `TELEGRAM_BOT_TOKEN`
      - Value: 您的机器人Token（从@BotFather获取）
+     - Key: `USE_WEBHOOK`
+     - Value: `true`（启用Webhook模式，适用于Web Service）
    
 4. **选择计划**
    - **Free Plan**: 适合测试，但会在15分钟无活动后休眠

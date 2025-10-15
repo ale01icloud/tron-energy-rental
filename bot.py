@@ -1,7 +1,7 @@
 # bot.py
 import os, re, threading, json, math, datetime
 from pathlib import Path
-from flask import Flask
+from flask import Flask, request
 from dotenv import load_dotenv
 import requests
 
@@ -10,15 +10,32 @@ load_dotenv()
 BOT_TOKEN = os.getenv("TELEGRAM_BOT_TOKEN")
 OWNER_ID  = os.getenv("OWNER_ID")  # 可选：你的 Telegram ID（字符串），拥有永久管理员权限
 
-# ========== 保活HTTP ==========
+# ========== Flask应用 + Webhook ==========
 app = Flask(__name__)
+
+# 全局bot application对象
+bot_app = None
+
 @app.get("/")
 def ok():
-    return "ok", 200
+    return "AA全球国际支付机器人正在运行", 200
 
-def run_http():
-    port = int(os.getenv("PORT", "5000"))
-    app.run(host="0.0.0.0", port=port, use_reloader=False)
+@app.post(f"/{BOT_TOKEN}")
+def webhook():
+    """处理Telegram webhook请求"""
+    import asyncio
+    from telegram import Update
+    
+    if bot_app:
+        try:
+            update_data = request.get_json()
+            update = Update.de_json(update_data, bot_app.bot)
+            # 在新的事件循环中处理更新
+            asyncio.run(bot_app.process_update(update))
+        except Exception as e:
+            print(f"Webhook处理错误: {e}")
+            return "error", 500
+    return "ok", 200
 
 # ========== 记账核心状态（多群组支持）==========
 DATA_DIR = Path("./data")
@@ -802,16 +819,50 @@ if __name__ == "__main__":
     print(f"📊 数据目录: {DATA_DIR}")
     print(f"👑 超级管理员: {OWNER_ID or '未设置'}")
     
-    print("\n🌐 启动 HTTP 保活服务器...")
-    threading.Thread(target=run_http, daemon=True).start()
-    print("✅ HTTP 服务器已启动（后台运行）")
+    # 检查运行模式
+    USE_WEBHOOK = os.getenv("USE_WEBHOOK", "false").lower() == "true"
+    RENDER_EXTERNAL_URL = os.getenv("RENDER_EXTERNAL_URL")  # Render自动提供
     
-    print("\n🤖 启动 Telegram Bot...")
+    print("\n🤖 配置 Telegram Bot...")
     from telegram.ext import ApplicationBuilder
-    appbot = ApplicationBuilder().token(BOT_TOKEN).build()
-    appbot.add_handler(CommandHandler("start", cmd_start))
-    appbot.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, handle_text))
+    bot_app = ApplicationBuilder().token(BOT_TOKEN).build()
+    bot_app.add_handler(CommandHandler("start", cmd_start))
+    bot_app.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, handle_text))
     print("✅ Bot 处理器已注册")
-    print("\n🎉 机器人正在运行，等待消息...")
-    print("=" * 50)
-    appbot.run_polling()
+    
+    if USE_WEBHOOK and RENDER_EXTERNAL_URL:
+        # Webhook模式（Render Web Service）
+        webhook_url = f"{RENDER_EXTERNAL_URL}/{BOT_TOKEN}"
+        print(f"\n🌐 使用 Webhook 模式")
+        print(f"📡 Webhook URL: {webhook_url}")
+        
+        # 在后台线程设置webhook
+        def setup_webhook():
+            import time
+            time.sleep(3)  # 等待Flask启动
+            try:
+                import asyncio
+                asyncio.run(bot_app.bot.set_webhook(webhook_url))
+                print("✅ Webhook 设置成功")
+            except Exception as e:
+                print(f"⚠️ Webhook 设置失败: {e}")
+        
+        threading.Thread(target=setup_webhook, daemon=True).start()
+        
+        # 启动Flask服务器（主进程）
+        port = int(os.getenv("PORT", "5000"))
+        print(f"\n🚀 启动 Flask 服务器 (端口 {port})...")
+        print("=" * 50)
+        app.run(host="0.0.0.0", port=port, use_reloader=False)
+    else:
+        # Polling模式（本地开发/Replit）
+        print("\n🔄 使用 Polling 模式（本地开发）")
+        print("\n🌐 启动 HTTP 保活服务器...")
+        def run_http():
+            port = int(os.getenv("PORT", "5000"))
+            app.run(host="0.0.0.0", port=port, use_reloader=False)
+        threading.Thread(target=run_http, daemon=True).start()
+        print("✅ HTTP 服务器已启动（后台运行）")
+        print("\n🎉 机器人正在运行，等待消息...")
+        print("=" * 50)
+        bot_app.run_polling()
