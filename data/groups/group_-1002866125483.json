@@ -20,6 +20,10 @@
       "in": {
         "rate": 0.2,
         "fx": 153.0
+      },
+      "out": {
+        "rate": 0.0,
+        "fx": 142.0
       }
     },
     "日本": {
@@ -95,11 +99,24 @@
         "usdt": 5.88
       }
     ],
-    "out": []
+    "out": [
+      {
+        "ts": "19:01",
+        "raw": 1000.0,
+        "usdt": 7.04,
+        "country": "pp"
+      },
+      {
+        "ts": "19:01",
+        "raw": 1000.0,
+        "usdt": 7.11,
+        "country": "pp"
+      }
+    ]
   },
   "summary": {
     "should_send_usdt": 3288.59,
-    "sent_usdt": 0.0
+    "sent_usdt": 14.15
   },
   "last_date": "2025-10-15"
 }

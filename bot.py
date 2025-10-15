@@ -160,16 +160,19 @@ def resolve_params(chat_id: int, direction: str, country: str|None) -> dict:
     state = load_group_state(chat_id)
     d = {"rate": None, "fx": None}
     countries = state["countries"]
+    
+    # 如果指定了国家，先查找该国家的专属设置
     if country and country in countries:
         if direction in countries[country]:
             d["rate"] = countries[country][direction].get("rate", None)
             d["fx"]   = countries[country][direction].get("fx", None)
-        if d["rate"] is None and "in" in countries[country]:
-            d["rate"] = countries[country]["in"].get("rate", None)
-        if d["fx"] is None and "in" in countries[country]:
-            d["fx"]   = countries[country]["in"].get("fx", None)
-    if d["rate"] is None: d["rate"] = state["defaults"][direction]["rate"]
-    if d["fx"]   is None: d["fx"]   = state["defaults"][direction]["fx"]
+    
+    # 如果没有找到，使用默认值（不再回退到入金设置）
+    if d["rate"] is None: 
+        d["rate"] = state["defaults"][direction]["rate"]
+    if d["fx"] is None: 
+        d["fx"] = state["defaults"][direction]["fx"]
+    
     return d
 
 def parse_amount_and_country(text: str):
