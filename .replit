@@ -3,6 +3,27 @@ modules = ["python-3.11"]
 expertMode = true
 
 [workflows]
+runButton = "Project"
+
+[[workflows.workflow]]
+name = "Project"
+mode = "parallel"
+author = "agent"
+
+[[workflows.workflow.tasks]]
+task = "workflow.run"
+args = "Test Bot (Local)"
+
+[[workflows.workflow]]
+name = "Test Bot (Local)"
+author = "agent"
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = "echo \"✅ Bot代码已准备就绪。本地测试请手动运行: python bot.py\" && echo \"⚠️ 注意：不要同时在Replit和Render运行bot，否则会冲突\" && sleep infinity"
+
+[workflows.workflow.metadata]
+outputType = "console"
 
 [[ports]]
 localPort = 5000

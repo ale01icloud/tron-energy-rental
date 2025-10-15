@@ -16,6 +16,7 @@ app = Flask(__name__)
 # 全局bot application对象（在webhook模式下会被设置）
 class BotContainer:
     application = None
+    loop = None
 
 @app.get("/")
 def health_check():
@@ -28,7 +29,7 @@ def health():
 @app.post("/<token>")
 def webhook(token):
     """处理Telegram webhook请求"""
-    if token != BOT_TOKEN or not BotContainer.application:
+    if token != BOT_TOKEN or not BotContainer.application or not BotContainer.loop:
         return "Unauthorized", 401
     
     try:
@@ -39,11 +40,12 @@ def webhook(token):
         update_data = request.get_json(force=True)
         update = Update.de_json(update_data, BotContainer.application.bot)
         
-        # 在新线程中异步处理
-        def process():
-            asyncio.run(BotContainer.application.process_update(update))
+        # 将更新提交到bot的事件循环
+        asyncio.run_coroutine_threadsafe(
+            BotContainer.application.process_update(update),
+            BotContainer.loop
+        )
         
-        threading.Thread(target=process).start()
         return "ok", 200
     except Exception as e:
         print(f"Webhook错误: {e}")
@@ -863,10 +865,14 @@ if __name__ == "__main__":
             
             async def set_webhook():
                 async with BotContainer.application:
+                    # 存储事件循环供webhook使用
+                    BotContainer.loop = asyncio.get_running_loop()
+                    
                     await BotContainer.application.bot.set_webhook(webhook_url)
                     print("✅ Webhook 设置成功")
                     # 保持application运行
                     await BotContainer.application.start()
+                    print("✅ Bot application已启动")
                     # 保持事件循环运行
                     await asyncio.Event().wait()
             
