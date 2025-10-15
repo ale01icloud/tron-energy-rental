@@ -41,6 +41,12 @@
   "recent": {
     "in": [
       {
+        "ts": "21:18",
+        "raw": 100.0,
+        "usdt": 0.58,
+        "country": null
+      },
+      {
         "ts": "19:16",
         "raw": 100.0,
         "usdt": 0.58,
@@ -128,7 +134,7 @@
     ]
   },
   "summary": {
-    "should_send_usdt": 27.76,
+    "should_send_usdt": 28.34,
     "sent_usdt": 21.3
   },
   "last_date": "2025-10-15"
