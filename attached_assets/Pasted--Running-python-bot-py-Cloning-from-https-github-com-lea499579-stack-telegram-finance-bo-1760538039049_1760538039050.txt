@@ -1,0 +1,122 @@
+==> Running 'python bot.py'
+==> Cloning from https://github.com/lea499579-stack/telegram-finance-bot
+==> Checking out commit b875212ba2da16e365dd00ab7a5f5b8d4367b4bc in branch main
+==> Installing Python version 3.13.4...
+==> Using Python version 3.13.4 (default)
+==> Docs on specifying a Python version: https://render.com/docs/python-version
+==> Using Poetry version 2.1.3 (default)
+==> Docs on specifying a Poetry version: https://render.com/docs/poetry-version
+==> Running build command 'pip install -r requirements.txt'...
+Collecting python-telegram-bot==21.3 (from -r requirements.txt (line 1))
+  Downloading python_telegram_bot-21.3-py3-none-any.whl.metadata (15 kB)
+Collecting Flask==3.0.3 (from -r requirements.txt (line 2))
+  Downloading flask-3.0.3-py3-none-any.whl.metadata (3.2 kB)
+Collecting python-dotenv==1.0.1 (from -r requirements.txt (line 3))
+  Downloading python_dotenv-1.0.1-py3-none-any.whl.metadata (23 kB)
+Collecting requests (from -r requirements.txt (line 4))
+  Downloading requests-2.32.5-py3-none-any.whl.metadata (4.9 kB)
+Collecting telegram (from -r requirements.txt (line 5))
+  Downloading telegram-0.0.1.tar.gz (879 bytes)
+  Installing build dependencies: started
+  Installing build dependencies: finished with status 'done'
+  Getting requirements to build wheel: started
+  Getting requirements to build wheel: finished with status 'done'
+  Preparing metadata (pyproject.toml): started
+  Preparing metadata (pyproject.toml): finished with status 'done'
+Collecting httpx~=0.27 (from python-telegram-bot==21.3->-r requirements.txt (line 1))
+  Downloading httpx-0.28.1-py3-none-any.whl.metadata (7.1 kB)
+Collecting Werkzeug>=3.0.0 (from Flask==3.0.3->-r requirements.txt (line 2))
+  Downloading werkzeug-3.1.3-py3-none-any.whl.metadata (3.7 kB)
+Collecting Jinja2>=3.1.2 (from Flask==3.0.3->-r requirements.txt (line 2))
+  Downloading jinja2-3.1.6-py3-none-any.whl.metadata (2.9 kB)
+Collecting itsdangerous>=2.1.2 (from Flask==3.0.3->-r requirements.txt (line 2))
+  Downloading itsdangerous-2.2.0-py3-none-any.whl.metadata (1.9 kB)
+Collecting click>=8.1.3 (from Flask==3.0.3->-r requirements.txt (line 2))
+  Downloading click-8.3.0-py3-none-any.whl.metadata (2.6 kB)
+Collecting blinker>=1.6.2 (from Flask==3.0.3->-r requirements.txt (line 2))
+  Downloading blinker-1.9.0-py3-none-any.whl.metadata (1.6 kB)
+Collecting anyio (from httpx~=0.27->python-telegram-bot==21.3->-r requirements.txt (line 1))
+  Downloading anyio-4.11.0-py3-none-any.whl.metadata (4.1 kB)
+Collecting certifi (from httpx~=0.27->python-telegram-bot==21.3->-r requirements.txt (line 1))
+  Downloading certifi-2025.10.5-py3-none-any.whl.metadata (2.5 kB)
+Collecting httpcore==1.* (from httpx~=0.27->python-telegram-bot==21.3->-r requirements.txt (line 1))
+  Downloading httpcore-1.0.9-py3-none-any.whl.metadata (21 kB)
+Collecting idna (from httpx~=0.27->python-telegram-bot==21.3->-r requirements.txt (line 1))
+  Downloading idna-3.11-py3-none-any.whl.metadata (8.4 kB)
+Collecting h11>=0.16 (from httpcore==1.*->httpx~=0.27->python-telegram-bot==21.3->-r requirements.txt (line 1))
+  Downloading h11-0.16.0-py3-none-any.whl.metadata (8.3 kB)
+Collecting charset_normalizer<4,>=2 (from requests->-r requirements.txt (line 4))
+  Downloading charset_normalizer-3.4.4-cp313-cp313-manylinux2014_x86_64.manylinux_2_17_x86_64.manylinux_2_28_x86_64.whl.metadata (37 kB)
+Collecting urllib3<3,>=1.21.1 (from requests->-r requirements.txt (line 4))
+  Downloading urllib3-2.5.0-py3-none-any.whl.metadata (6.5 kB)
+Collecting MarkupSafe>=2.0 (from Jinja2>=3.1.2->Flask==3.0.3->-r requirements.txt (line 2))
+  Downloading markupsafe-3.0.3-cp313-cp313-manylinux2014_x86_64.manylinux_2_17_x86_64.manylinux_2_28_x86_64.whl.metadata (2.7 kB)
+Collecting sniffio>=1.1 (from anyio->httpx~=0.27->python-telegram-bot==21.3->-r requirements.txt (line 1))
+  Downloading sniffio-1.3.1-py3-none-any.whl.metadata (3.9 kB)
+Downloading python_telegram_bot-21.3-py3-none-any.whl (631 kB)
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 631.6/631.6 kB 3.0 MB/s eta 0:00:00
+Downloading flask-3.0.3-py3-none-any.whl (101 kB)
+Downloading python_dotenv-1.0.1-py3-none-any.whl (19 kB)
+Downloading httpx-0.28.1-py3-none-any.whl (73 kB)
+Downloading httpcore-1.0.9-py3-none-any.whl (78 kB)
+Downloading requests-2.32.5-py3-none-any.whl (64 kB)
+Downloading charset_normalizer-3.4.4-cp313-cp313-manylinux2014_x86_64.manylinux_2_17_x86_64.manylinux_2_28_x86_64.whl (153 kB)
+Downloading idna-3.11-py3-none-any.whl (71 kB)
+Downloading urllib3-2.5.0-py3-none-any.whl (129 kB)
+Downloading blinker-1.9.0-py3-none-any.whl (8.5 kB)
+Downloading certifi-2025.10.5-py3-none-any.whl (163 kB)
+Downloading click-8.3.0-py3-none-any.whl (107 kB)
+Downloading h11-0.16.0-py3-none-any.whl (37 kB)
+Downloading itsdangerous-2.2.0-py3-none-any.whl (16 kB)
+Downloading jinja2-3.1.6-py3-none-any.whl (134 kB)
+Downloading markupsafe-3.0.3-cp313-cp313-manylinux2014_x86_64.manylinux_2_17_x86_64.manylinux_2_28_x86_64.whl (22 kB)
+Downloading werkzeug-3.1.3-py3-none-any.whl (224 kB)
+Downloading anyio-4.11.0-py3-none-any.whl (109 kB)
+Downloading sniffio-1.3.1-py3-none-any.whl (10 kB)
+Building wheels for collected packages: telegram
+  Building wheel for telegram (pyproject.toml): started
+  Building wheel for telegram (pyproject.toml): finished with status 'done'
+  Created wheel for telegram: filename=telegram-0.0.1-py3-none-any.whl size=1326 sha256=27b36c4696c80f2a9e8679797d14d55250a8ba7893a4e42a59f700b7d0540bfe
+  Stored in directory: /opt/render/.cache/wheels/ed/a7/da/985c884676d0871f049aaa23d93ca2eab485bad0475e0a4319
+Successfully built telegram
+Installing collected packages: telegram, urllib3, sniffio, python-dotenv, MarkupSafe, itsdangerous, idna, h11, click, charset_normalizer, certifi, blinker, Werkzeug, requests, Jinja2, httpcore, anyio, httpx, Flask, python-telegram-bot
+Successfully installed Flask-3.0.3 Jinja2-3.1.6 MarkupSafe-3.0.3 Werkzeug-3.1.3 anyio-4.11.0 blinker-1.9.0 certifi-2025.10.5 charset_normalizer-3.4.4 click-8.3.0 h11-0.16.0 httpcore-1.0.9 httpx-0.28.1 idna-3.11 itsdangerous-2.2.0 python-dotenv-1.0.1 python-telegram-bot-21.3 requests-2.32.5 sniffio-1.3.1 telegram-0.0.1 urllib3-2.5.0
+[notice] A new release of pip is available: 25.1.1 -> 25.2
+[notice] To update, run: pip install --upgrade pip
+==> Uploading build...
+==> Uploaded in 10.0s. Compression took 7.7s
+==> Build successful 🎉
+==> Deploying...
+AttributeError: 'Application' object has no attribute '_Application__stop_running_marker' and no __dict__ for setting new attributes
+==> Exited with status 1
+==> Common ways to troubleshoot your deploy: https://render.com/docs/troubleshooting-deploys
+==> Running 'python bot.py'
+==================================================
+🚀 正在启动财务记账机器人...
+==================================================
+✅ Bot Token 已加载
+📊 数据目录: data
+👑 超级管理员: 未设置
+🤖 配置 Telegram Bot...
+🔄 使用 Polling 模式（本地开发）
+Traceback (most recent call last):
+  File "/opt/render/project/src/bot.py", line 901, in <module>
+    application = ApplicationBuilder().token(BOT_TOKEN).build()
+  File "/opt/render/project/src/.venv/lib/python3.13/site-packages/telegram/ext/_applicationbuilder.py", line 327, in build
+    ] = DefaultValue.get_value(  # pylint: disable=not-callable
+        ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+        self._application_class
+        ~~~~~~~~~~~~~~~~~~~~~~~
+    )(
+    ~^
+        bot=bot,
+        ^^^^^^^^
+    ...<9 lines>...
+        **self._application_kwargs,  # For custom Application subclasses
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    )
+    ^
+  File "/opt/render/project/src/.venv/lib/python3.13/site-packages/telegram/ext/_application.py", line 368, in __init__
+    self.__stop_running_marker = asyncio.Event()
+    ^^^^^^^^^^^^^^^^^^^^^^^^^^
+AttributeError: 'Application' object has no attribute '_Application__stop_running_marker' and no __dict__ for setting new attributes

@@ -2,7 +2,6 @@ services:
   - type: web
     name: telegram-accounting-bot
     env: python
-    runtime: python-3.11
     buildCommand: "pip install -r requirements.txt"
     startCommand: "python bot.py"
     envVars:
@@ -11,7 +10,7 @@ services:
       - key: SESSION_SECRET
         sync: false
       - key: USE_WEBHOOK
-        value: true
+        value: "true"
       - key: PYTHON_VERSION
-        value: 3.11.0
+        value: "3.11.9"
     autoDeploy: true
