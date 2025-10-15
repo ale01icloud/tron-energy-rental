@@ -21,6 +21,12 @@
         "rate": 0.2,
         "fx": 153.0
       }
+    },
+    "日本": {
+      "in": {
+        "rate": 0.07,
+        "fx": 150.0
+      }
     }
   },
   "precision": {
@@ -30,6 +36,18 @@
   "bot_name": "AA全球国际支付",
   "recent": {
     "in": [
+      {
+        "ts": "18:55",
+        "raw": 1000.0,
+        "usdt": 465.0,
+        "country": "美国"
+      },
+      {
+        "ts": "18:55",
+        "raw": 1000.0,
+        "usdt": 5.22,
+        "country": "pp"
+      },
       {
         "ts": "18:54",
         "raw": 1000.0,
@@ -74,7 +92,7 @@
     "out": []
   },
   "summary": {
-    "should_send_usdt": 2812.17,
+    "should_send_usdt": 3282.39,
     "sent_usdt": 0.0
   },
   "last_date": "2025-10-15"
