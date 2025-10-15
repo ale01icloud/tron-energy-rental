@@ -20,39 +20,64 @@ def run_http():
     port = int(os.getenv("PORT", "5000"))
     app.run(host="0.0.0.0", port=port, use_reloader=False)
 
-# ========== 记账核心状态 ==========
+# ========== 记账核心状态（多群组支持）==========
 DATA_DIR = Path("./data")
+GROUPS_DIR = DATA_DIR / "groups"
 LOG_DIR  = DATA_DIR / "logs"
 DATA_DIR.mkdir(parents=True, exist_ok=True)
+GROUPS_DIR.mkdir(parents=True, exist_ok=True)
 LOG_DIR.mkdir(parents=True, exist_ok=True)
 
-STATE_FILE = DATA_DIR / "state.json"
 ADMIN_FILE = DATA_DIR / "admins.json"
 
-# 初始化状态
-state = {
-    "defaults": {  # 通用设置
-        "in":  {"rate": 0.10, "fx": 153},   # 入金：费率10%，汇率153
-        "out": {"rate": -0.02, "fx": 137},  # 出金：费率-2%，汇率137
-    },
-    "countries": {},
-    "precision": {"mode": "truncate", "digits": 2},
-    "bot_name": "AA全球国际支付",
-    "recent": {"in": [], "out": []},
-    "summary": {"should_send_usdt": 0.0, "sent_usdt": 0.0},
-    "last_date": ""  # 记录上次操作的日期，用于每日重置
-}
+# 群组状态缓存 {chat_id: state_dict}
+groups_state = {}
 
-def load_state():
-    if STATE_FILE.exists():
+def get_default_state():
+    """返回默认群组状态"""
+    return {
+        "defaults": {
+            "in":  {"rate": 0.10, "fx": 153},
+            "out": {"rate": -0.02, "fx": 137},
+        },
+        "countries": {},
+        "precision": {"mode": "truncate", "digits": 2},
+        "bot_name": "AA全球国际支付",
+        "recent": {"in": [], "out": []},
+        "summary": {"should_send_usdt": 0.0, "sent_usdt": 0.0},
+        "last_date": ""
+    }
+
+def get_group_file(chat_id: int) -> Path:
+    """获取群组数据文件路径"""
+    return GROUPS_DIR / f"group_{chat_id}.json"
+
+def load_group_state(chat_id: int) -> dict:
+    """加载群组状态"""
+    if chat_id in groups_state:
+        return groups_state[chat_id]
+    
+    file = get_group_file(chat_id)
+    if file.exists():
         try:
-            s = json.loads(STATE_FILE.read_text(encoding="utf-8"))
-            state.update(s)
+            state = json.loads(file.read_text(encoding="utf-8"))
+            groups_state[chat_id] = state
+            return state
         except Exception:
             pass
+    
+    # 创建新群组状态
+    state = get_default_state()
+    groups_state[chat_id] = state
+    save_group_state(chat_id)
+    return state
 
-def save_state():
-    STATE_FILE.write_text(json.dumps(state, ensure_ascii=False, indent=2), encoding="utf-8")
+def save_group_state(chat_id: int):
+    """保存群组状态"""
+    if chat_id not in groups_state:
+        return
+    file = get_group_file(chat_id)
+    file.write_text(json.dumps(groups_state[chat_id], ensure_ascii=False, indent=2), encoding="utf-8")
 
 def load_admins():
     if not ADMIN_FILE.exists():
@@ -68,7 +93,6 @@ def load_admins():
 def save_admins(admin_list):
     ADMIN_FILE.write_text(json.dumps(admin_list, ensure_ascii=False, indent=2), encoding="utf-8")
 
-load_state()
 admins_cache = load_admins()
 
 # ========== 工具函数 ==========
@@ -88,8 +112,9 @@ def today_str():
     beijing_tz = datetime.timezone(datetime.timedelta(hours=8))
     return datetime.datetime.now(beijing_tz).strftime("%Y-%m-%d")
 
-def check_and_reset_daily():
+def check_and_reset_daily(chat_id: int):
     """检查日期，如果日期变了（过了0点），清空账单"""
+    state = load_group_state(chat_id)
     current_date = today_str()
     last_date = state.get("last_date", "")
     
@@ -100,17 +125,21 @@ def check_and_reset_daily():
         state["summary"]["should_send_usdt"] = 0.0
         state["summary"]["sent_usdt"] = 0.0
         state["last_date"] = current_date
-        save_state()
+        save_group_state(chat_id)
         return True  # 返回True表示已重置
     elif not last_date:
         # 首次运行，设置日期
         state["last_date"] = current_date
-        save_state()
+        save_group_state(chat_id)
     
     return False  # 返回False表示未重置
 
-def log_path(country: str|None, date_str: str) -> Path:
-    folder = country if country else "通用"
+def log_path(chat_id: int, country: str|None, date_str: str) -> Path:
+    folder = f"group_{chat_id}"
+    if country:
+        folder = f"{folder}/{country}"
+    else:
+        folder = f"{folder}/通用"
     p = LOG_DIR / folder
     p.mkdir(parents=True, exist_ok=True)
     return p / f"{date_str}.log"
@@ -119,12 +148,14 @@ def append_log(path: Path, text: str):
     with path.open("a", encoding="utf-8") as f:
         f.write(text.strip() + "\n")
 
-def push_recent(kind: str, item: dict):
+def push_recent(chat_id: int, kind: str, item: dict):
+    state = load_group_state(chat_id)
     arr = state["recent"][kind]
     arr.insert(0, item)
-    # 不再限制记录数量，保存当天所有记录
+    save_group_state(chat_id)
 
-def resolve_params(direction: str, country: str|None) -> dict:
+def resolve_params(chat_id: int, direction: str, country: str|None) -> dict:
+    state = load_group_state(chat_id)
     d = {"rate": None, "fx": None}
     countries = state["countries"]
     if country and country in countries:
@@ -173,7 +204,8 @@ def list_admins():
     return admins_cache[:]
 
 # ========== 群内汇总显示 ==========
-def render_group_summary() -> str:
+def render_group_summary(chat_id: int) -> str:
+    state = load_group_state(chat_id)
     bot = state["bot_name"]
     rec_in, rec_out = state["recent"]["in"], state["recent"]["out"]
     should, sent = trunc2(state["summary"]["should_send_usdt"]), trunc2(state["summary"]["sent_usdt"])
@@ -204,8 +236,9 @@ def render_group_summary() -> str:
     lines.append("📚 **查看更多记录**：发送「更多记录」")
     return "\n".join(lines)
 
-def render_full_summary() -> str:
+def render_full_summary(chat_id: int) -> str:
     """显示当天所有记录"""
+    state = load_group_state(chat_id)
     bot = state["bot_name"]
     rec_in, rec_out = state["recent"]["in"], state["recent"]["out"]
     should, sent = trunc2(state["summary"]["should_send_usdt"]), trunc2(state["summary"]["sent_usdt"])
@@ -358,11 +391,15 @@ async def cmd_start(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
 async def handle_text(update: Update, context: ContextTypes.DEFAULT_TYPE):
     user = update.effective_user
+    chat_id = update.effective_chat.id
     text = (update.message.text or "").strip()
     ts, dstr = now_ts(), today_str()
     
-    # 检查日期并在需要时重置账单
-    check_and_reset_daily()
+    # 检查日期并在需要时重置账单（每个群组独立）
+    check_and_reset_daily(chat_id)
+    
+    # 获取当前群组状态
+    state = load_group_state(chat_id)
     
     # 撤销操作（回复机器人消息 + 任意文本）
     if update.message.reply_to_message and update.message.reply_to_message.from_user.is_bot:
@@ -391,14 +428,15 @@ async def handle_text(update: Update, context: ContextTypes.DEFAULT_TYPE):
             
             # 反向操作：减少应下发
             state["summary"]["should_send_usdt"] = trunc2(state["summary"]["should_send_usdt"] - usdt_amt)
+            save_group_state(chat_id)
             
             # 从最近记录中移除（如果存在）
             state["recent"]["in"] = [r for r in state["recent"]["in"] if not (r.get("raw") == raw_amt and r.get("usdt") == usdt_amt)]
             
-            save_state()
-            append_log(log_path(None, dstr), f"[撤销入金] 时间:{ts} 原金额:{raw_amt} USDT:{usdt_amt} 标记:无效操作")
+            save_group_state(chat_id)
+            append_log(log_path(chat_id, None, dstr), f"[撤销入金] 时间:{ts} 原金额:{raw_amt} USDT:{usdt_amt} 标记:无效操作")
             await update.message.reply_text(f"✅ 已撤销入金记录\n📊 原金额：+{raw_amt} → {usdt_amt} USDT")
-            await update.message.reply_text(render_group_summary())
+            await update.message.reply_text(render_group_summary(chat_id))
             return
             
         elif out_match:
@@ -411,10 +449,10 @@ async def handle_text(update: Update, context: ContextTypes.DEFAULT_TYPE):
             # 从最近记录中移除
             state["recent"]["out"] = [r for r in state["recent"]["out"] if r.get("usdt") != usdt_amt]
             
-            save_state()
-            append_log(log_path(None, dstr), f"[撤销下发] 时间:{ts} USDT:{usdt_amt} 标记:无效操作")
+            save_group_state(chat_id)
+            append_log(log_path(chat_id, None, dstr), f"[撤销下发] 时间:{ts} USDT:{usdt_amt} 标记:无效操作")
             await update.message.reply_text(f"✅ 已撤销下发记录\n📊 原金额：{usdt_amt} USDT")
-            await update.message.reply_text(render_group_summary())
+            await update.message.reply_text(render_group_summary(chat_id))
             return
         else:
             await update.message.reply_text("❌ 无法识别要撤销的操作\n💡 请回复包含入金或下发记录的账单消息")
@@ -422,7 +460,7 @@ async def handle_text(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
     # 查看账单（+0 不记录）
     if text == "+0":
-        await update.message.reply_text(render_group_summary())
+        await update.message.reply_text(render_group_summary(chat_id))
         return
     
     # 管理员管理命令
@@ -508,7 +546,7 @@ async def handle_text(update: Update, context: ContextTypes.DEFAULT_TYPE):
             
             # 更新默认设置
             state["defaults"][direction][key] = val
-            save_state()
+            save_group_state(chat_id)
             
             # 构建回复消息
             type_name = "费率" if key == "rate" else "汇率"
@@ -537,7 +575,7 @@ async def handle_text(update: Update, context: ContextTypes.DEFAULT_TYPE):
             if scope == "默认": state["defaults"][direction][key] = val
             else:
                 state["countries"].setdefault(scope, {}).setdefault(direction, {})[key] = val
-            save_state()
+            save_group_state(chat_id)
             await update.message.reply_text(f"✅ 已设置 {scope} {direction} {key} = {val}", parse_mode="Markdown")
         except ValueError:
             return  # 无效数字，忽略
@@ -548,14 +586,14 @@ async def handle_text(update: Update, context: ContextTypes.DEFAULT_TYPE):
         if not is_admin(user.id):
             return  # 非管理员不回复
         amt, country = parse_amount_and_country(text)
-        p = resolve_params("in", country)
+        p = resolve_params(chat_id, "in", country)
         usdt = trunc2(amt * (1 - p["rate"]) / p["fx"])
-        push_recent("in", {"ts": ts, "raw": amt, "usdt": usdt})
+        push_recent(chat_id, "in", {"ts": ts, "raw": amt, "usdt": usdt})
         state["summary"]["should_send_usdt"] = trunc2(state["summary"]["should_send_usdt"] + usdt)
-        save_state()
-        append_log(log_path(country, dstr),
+        save_group_state(chat_id)
+        append_log(log_path(chat_id, country, dstr),
                    f"[入金] 时间:{ts} 国家:{country or '通用'} 原始:{amt} 汇率:{p['fx']} 费率:{p['rate']*100:.2f}% 结果:{usdt}")
-        await update.message.reply_text(render_group_summary())
+        await update.message.reply_text(render_group_summary(chat_id))
         return
 
     # 出金
@@ -563,14 +601,14 @@ async def handle_text(update: Update, context: ContextTypes.DEFAULT_TYPE):
         if not is_admin(user.id):
             return  # 非管理员不回复
         amt, country = parse_amount_and_country(text)
-        p = resolve_params("out", country)
+        p = resolve_params(chat_id, "out", country)
         usdt = trunc2(amt * (1 + p["rate"]) / p["fx"])
-        push_recent("out", {"ts": ts, "raw": amt, "usdt": usdt})
+        push_recent(chat_id, "out", {"ts": ts, "raw": amt, "usdt": usdt})
         state["summary"]["sent_usdt"] = trunc2(state["summary"]["sent_usdt"] + usdt)
-        save_state()
-        append_log(log_path(country, dstr),
+        save_group_state(chat_id)
+        append_log(log_path(chat_id, country, dstr),
                    f"[出金] 时间:{ts} 国家:{country or '通用'} 原始:{amt} 汇率:{p['fx']} 费率:{p['rate']*100:.2f}% 下发:{usdt}")
-        await update.message.reply_text(render_group_summary())
+        await update.message.reply_text(render_group_summary(chat_id))
         return
 
     # 下发USDT（仅管理员）
@@ -584,24 +622,24 @@ async def handle_text(update: Update, context: ContextTypes.DEFAULT_TYPE):
             if usdt > 0:
                 # 正数：扣除应下发
                 state["summary"]["should_send_usdt"] = trunc2(state["summary"]["should_send_usdt"] - usdt)
-                push_recent("out", {"ts": ts, "usdt": usdt, "type": "下发"})
-                append_log(log_path(None, dstr), f"[下发USDT] 时间:{ts} 金额:{usdt} USDT")
+                push_recent(chat_id, "out", {"ts": ts, "usdt": usdt, "type": "下发"})
+                append_log(log_path(chat_id, None, dstr), f"[下发USDT] 时间:{ts} 金额:{usdt} USDT")
             else:
                 # 负数：增加应下发（撤销）
                 usdt_abs = trunc2(abs(usdt))  # 对绝对值也进行精度截断
                 state["summary"]["should_send_usdt"] = trunc2(state["summary"]["should_send_usdt"] + usdt_abs)
-                push_recent("out", {"ts": ts, "usdt": usdt, "type": "下发"})
-                append_log(log_path(None, dstr), f"[撤销下发] 时间:{ts} 金额:{usdt_abs} USDT")
+                push_recent(chat_id, "out", {"ts": ts, "usdt": usdt, "type": "下发"})
+                append_log(log_path(chat_id, None, dstr), f"[撤销下发] 时间:{ts} 金额:{usdt_abs} USDT")
             
-            save_state()
-            await update.message.reply_text(render_group_summary())
+            save_group_state(chat_id)
+            await update.message.reply_text(render_group_summary(chat_id))
         except ValueError:
             await update.message.reply_text("❌ 格式错误，请输入有效的数字\n例如：下发35.04 或 下发-35.04")
         return
 
     # 查看更多记录
     if text in ["更多记录", "查看更多记录", "更多账单", "显示历史账单"]:
-        await update.message.reply_text(render_full_summary())
+        await update.message.reply_text(render_full_summary(chat_id))
         return
 
     # 无效操作不回复
