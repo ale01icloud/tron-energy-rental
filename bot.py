@@ -180,43 +180,13 @@ def get_okx_rate():
         return {"success": False, "error": f"获取失败: {str(e)}"}
 
 def get_okx_p2p_prices():
-    """获取欧易P2P市场排名靠前的U商价格"""
+    """获取欧易P2P市场和大宗交易排名靠前的U商价格"""
     try:
-        # 尝试获取P2P买入价格（用户买USDT，商家卖USDT）
-        url = "https://www.okx.com/v3/c2c/tradingOrders/books"
-        
         headers = {
             "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36",
-            "Accept": "application/json"
+            "Accept": "application/json",
+            "Content-Type": "application/json"
         }
-        
-        # 买入USDT的订单（商家卖出）
-        buy_params = {
-            "quoteCurrency": "CNY",
-            "baseCurrency": "USDT",
-            "side": "sell",  # 商家卖出 = 用户买入
-            "paymentMethod": "all",
-            "userType": "all",
-            "receivingAds": "false",
-            "limit": 5
-        }
-        
-        buy_response = requests.post(url, json=buy_params, headers=headers, timeout=5)
-        buy_data = buy_response.json()
-        
-        # 卖出USDT的订单（商家买入）
-        sell_params = {
-            "quoteCurrency": "CNY",
-            "baseCurrency": "USDT", 
-            "side": "buy",  # 商家买入 = 用户卖出
-            "paymentMethod": "all",
-            "userType": "all",
-            "receivingAds": "false",
-            "limit": 5
-        }
-        
-        sell_response = requests.post(url, json=sell_params, headers=headers, timeout=5)
-        sell_data = sell_response.json()
         
         result = {
             "success": True,
@@ -224,31 +194,67 @@ def get_okx_p2p_prices():
             "sell_prices": []  # 用户卖出价格
         }
         
-        # 解析买入价格
-        if buy_data.get("data") and buy_data["data"].get("buy"):
-            for ad in buy_data["data"]["buy"][:5]:
-                result["buy_prices"].append({
-                    "price": float(ad.get("price", 0)),
-                    "merchant": ad.get("nickName", "未知商家"),
-                    "available": float(ad.get("availableAmount", 0))
-                })
+        # 尝试多个可能的API端点
+        api_endpoints = [
+            {
+                "url": "https://www.okx.com/v3/c2c/tradingOrders/getMarketplaceAds",
+                "buy_payload": {"side": "sell", "crypto": "USDT", "fiat": "CNY", "paymentMethod": ""},
+                "sell_payload": {"side": "buy", "crypto": "USDT", "fiat": "CNY", "paymentMethod": ""}
+            },
+            {
+                "url": "https://www.okx.com/api/v5/market/c2c-lite",
+                "buy_payload": {"instId": "USDT-CNY", "side": "sell"},
+                "sell_payload": {"instId": "USDT-CNY", "side": "buy"}
+            }
+        ]
         
-        # 解析卖出价格  
-        if sell_data.get("data") and sell_data["data"].get("sell"):
-            for ad in sell_data["data"]["sell"][:5]:
-                result["sell_prices"].append({
-                    "price": float(ad.get("price", 0)),
-                    "merchant": ad.get("nickName", "未知商家"),
-                    "available": float(ad.get("availableAmount", 0))
-                })
+        for endpoint in api_endpoints:
+            try:
+                # 获取买入价格（用户买USDT）
+                buy_response = requests.post(endpoint["url"], json=endpoint["buy_payload"], headers=headers, timeout=3)
+                if buy_response.status_code == 200:
+                    buy_data = buy_response.json()
+                    
+                    # 尝试解析不同的数据结构
+                    ads = buy_data.get("data", {}).get("buy", []) or buy_data.get("data", []) or []
+                    
+                    for ad in ads[:10]:
+                        price = ad.get("price") or ad.get("quotePrice") or ad.get("px")
+                        merchant = ad.get("nickName") or ad.get("merchantName") or ad.get("maker") or "商家"
+                        
+                        if price:
+                            result["buy_prices"].append({
+                                "price": float(price),
+                                "merchant": str(merchant)[:10]
+                            })
+                
+                # 获取卖出价格（用户卖USDT）
+                sell_response = requests.post(endpoint["url"], json=endpoint["sell_payload"], headers=headers, timeout=3)
+                if sell_response.status_code == 200:
+                    sell_data = sell_response.json()
+                    
+                    ads = sell_data.get("data", {}).get("sell", []) or sell_data.get("data", []) or []
+                    
+                    for ad in ads[:10]:
+                        price = ad.get("price") or ad.get("quotePrice") or ad.get("px")
+                        merchant = ad.get("nickName") or ad.get("merchantName") or ad.get("maker") or "商家"
+                        
+                        if price:
+                            result["sell_prices"].append({
+                                "price": float(price),
+                                "merchant": str(merchant)[:10]
+                            })
+                
+                # 如果获取到数据就返回
+                if result["buy_prices"] or result["sell_prices"]:
+                    return result
+                    
+            except:
+                continue
         
-        if not result["buy_prices"] and not result["sell_prices"]:
-            return {"success": False, "error": "无法获取P2P价格数据"}
+        # 如果所有端点都失败，返回错误
+        return {"success": False, "error": "无法获取P2P价格，API可能已变更"}
         
-        return result
-        
-    except requests.exceptions.Timeout:
-        return {"success": False, "error": "请求超时"}
     except Exception as e:
         return {"success": False, "error": f"获取失败: {str(e)}"}
 
@@ -493,16 +499,16 @@ async def handle_text(update: Update, context: ContextTypes.DEFAULT_TYPE):
         if p2p_data["success"]:
             # 买入价格（用户买USDT）
             if p2p_data["buy_prices"]:
-                message_lines.append("🛒 买入USDT（前5名商家）：")
-                for i, ad in enumerate(p2p_data["buy_prices"][:5], 1):
-                    message_lines.append(f"  {i}. ¥{ad['price']:.2f} - {ad['merchant'][:8]}...")
+                message_lines.append("🛒 买入USDT（前10名商家）：")
+                for i, ad in enumerate(p2p_data["buy_prices"][:10], 1):
+                    message_lines.append(f"  {i}. ¥{ad['price']:.2f} - {ad['merchant']}")
                 message_lines.append("")
             
             # 卖出价格（用户卖USDT）
             if p2p_data["sell_prices"]:
-                message_lines.append("💵 卖出USDT（前5名商家）：")
-                for i, ad in enumerate(p2p_data["sell_prices"][:5], 1):
-                    message_lines.append(f"  {i}. ¥{ad['price']:.2f} - {ad['merchant'][:8]}...")
+                message_lines.append("💵 卖出USDT（前10名商家）：")
+                for i, ad in enumerate(p2p_data["sell_prices"][:10], 1):
+                    message_lines.append(f"  {i}. ¥{ad['price']:.2f} - {ad['merchant']}")
                 message_lines.append("")
         else:
             message_lines.append(f"⚠️ P2P数据：{p2p_data['error']}\n")
