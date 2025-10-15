@@ -508,16 +508,16 @@ async def handle_text(update: Update, context: ContextTypes.DEFAULT_TYPE):
         if p2p_data["success"]:
             # 买入价格（用户买USDT）
             if p2p_data["buy_prices"]:
-                message_lines.append("🛒 买入USDT（前10名商家）：")
+                message_lines.append("🛒 买入USDT商家实时汇率 TOP10：")
                 for i, ad in enumerate(p2p_data["buy_prices"][:10], 1):
-                    message_lines.append(f"  {i}. ¥{ad['price']:.2f} - {ad['merchant']}")
+                    message_lines.append(f"{i}) {ad['price']:.2f}   {ad['merchant']}")
                 message_lines.append("")
             
             # 卖出价格（用户卖USDT）
             if p2p_data["sell_prices"]:
-                message_lines.append("💵 卖出USDT（前10名商家）：")
+                message_lines.append("💵 卖出USDT商家实时汇率 TOP10：")
                 for i, ad in enumerate(p2p_data["sell_prices"][:10], 1):
-                    message_lines.append(f"  {i}. ¥{ad['price']:.2f} - {ad['merchant']}")
+                    message_lines.append(f"{i}) {ad['price']:.2f}   {ad['merchant']}")
                 message_lines.append("")
         else:
             message_lines.append(f"⚠️ P2P数据：{p2p_data['error']}\n")
