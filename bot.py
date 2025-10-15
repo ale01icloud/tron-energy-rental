@@ -3,6 +3,7 @@ import os, re, threading, json, math, datetime
 from pathlib import Path
 from flask import Flask
 from dotenv import load_dotenv
+import requests
 
 # ========== 加载环境 ==========
 load_dotenv()
@@ -146,6 +147,38 @@ def parse_amount_and_country(text: str):
     country = m2.group(1) if m2 else None
     return amount, country
 
+def get_okx_rate():
+    """获取欧易(OKX) USDT/CNY 实时汇率"""
+    try:
+        url = "https://www.okx.com/api/v5/market/tickers"
+        params = {
+            "instType": "SPOT",
+            "instId": "USDT-CNY"
+        }
+        response = requests.get(url, params=params, timeout=5)
+        data = response.json()
+        
+        if data.get("code") == "0" and data.get("data"):
+            ticker = data["data"][0]
+            last_price = float(ticker["last"])
+            high_24h = float(ticker["high24h"])
+            low_24h = float(ticker["low24h"])
+            vol_24h = float(ticker["vol24h"])
+            
+            return {
+                "success": True,
+                "last": last_price,
+                "high": high_24h,
+                "low": low_24h,
+                "volume": vol_24h
+            }
+        else:
+            return {"success": False, "error": "API返回数据格式错误"}
+    except requests.exceptions.Timeout:
+        return {"success": False, "error": "请求超时"}
+    except Exception as e:
+        return {"success": False, "error": f"获取失败: {str(e)}"}
+
 # ========== 管理员系统 ==========
 def is_admin(user_id: int) -> bool:
     if OWNER_ID and OWNER_ID.isdigit() and int(OWNER_ID) == user_id:
@@ -271,6 +304,8 @@ async def cmd_start(update: Update, context: ContextTypes.DEFAULT_TYPE):
                 "  入金：+10000 或 +10000 / 日本\n"
                 "  出金：-10000 或 -10000 / 日本\n"
                 "  查看账单：+0 或 更多记录\n\n"
+                "💹 查询汇率：\n"
+                "  z0 或 Z0 - 查询欧易USDT/CNY实时汇率\n\n"
                 "💰 USDT下发（仅管理员）：\n"
                 "  下发35.04（记录下发并扣除应下发）\n"
                 "  下发-35.04（撤销下发并增加应下发）\n\n"
@@ -335,6 +370,8 @@ async def cmd_start(update: Update, context: ContextTypes.DEFAULT_TYPE):
             "  入金：+10000 或 +10000 / 日本\n"
             "  出金：-10000 或 -10000 / 日本\n"
             "  查看账单：+0 或 更多记录\n\n"
+            "💹 查询汇率：\n"
+            "  z0 或 Z0 - 查询欧易USDT/CNY实时汇率\n\n"
             "💰 USDT下发（仅管理员）：\n"
             "  下发35.04（记录下发并扣除应下发）\n"
             "  下发-35.04（撤销下发并增加应下发）\n\n"
@@ -362,6 +399,23 @@ async def handle_text(update: Update, context: ContextTypes.DEFAULT_TYPE):
     
     # 检查日期并在需要时重置账单
     check_and_reset_daily()
+    
+    # 查询欧易实时汇率
+    if text.lower() == "z0":
+        rate_data = get_okx_rate()
+        if rate_data["success"]:
+            message = (
+                "💹 欧易(OKX) USDT/CNY 实时汇率\n\n"
+                f"💰 当前价格：¥{rate_data['last']:.2f}\n"
+                f"📈 24h最高：¥{rate_data['high']:.2f}\n"
+                f"📉 24h最低：¥{rate_data['low']:.2f}\n"
+                f"📊 24h成交量：{rate_data['volume']:.2f} USDT\n\n"
+                f"🕐 更新时间：{ts}"
+            )
+        else:
+            message = f"❌ 获取汇率失败\n{rate_data['error']}"
+        await update.message.reply_text(message)
+        return
     
     # 撤销操作（回复机器人消息 + 任意文本）
     if update.message.reply_to_message and update.message.reply_to_message.from_user.is_bot:
