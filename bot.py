@@ -855,16 +855,24 @@ if __name__ == "__main__":
         BotContainer.application.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, handle_text))
         print("✅ Bot 处理器已注册")
         
-        # 初始化bot（必须）
-        import asyncio
-        loop = asyncio.new_event_loop()
-        asyncio.set_event_loop(loop)
-        loop.run_until_complete(BotContainer.application.initialize())
-        loop.run_until_complete(BotContainer.application.start())
+        # 在后台线程中设置webhook
+        def setup_webhook():
+            import asyncio
+            import time
+            time.sleep(2)  # 等待Flask启动
+            
+            async def set_webhook():
+                async with BotContainer.application:
+                    await BotContainer.application.bot.set_webhook(webhook_url)
+                    print("✅ Webhook 设置成功")
+                    # 保持application运行
+                    await BotContainer.application.start()
+                    # 保持事件循环运行
+                    await asyncio.Event().wait()
+            
+            asyncio.run(set_webhook())
         
-        # 设置webhook
-        loop.run_until_complete(BotContainer.application.bot.set_webhook(webhook_url))
-        print("✅ Webhook 设置成功")
+        threading.Thread(target=setup_webhook, daemon=True).start()
         
         # 自动保活机制 - 每10分钟ping一次自己防止休眠
         def keep_alive():
