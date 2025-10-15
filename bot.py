@@ -559,27 +559,64 @@ async def handle_text(update: Update, context: ContextTypes.DEFAULT_TYPE):
             await update.message.reply_text("❌ 格式错误，请输入有效的数字\n例如：设置入金费率 10")
         return
 
-    # 高级设置命令（指定国家）
-    if text.startswith("设置"):
+    # 高级设置命令（指定国家）- 支持无空格格式
+    if text.startswith("设置") and not text.startswith(("设置入金", "设置出金")):
         if not is_admin(user.id):
             return  # 非管理员不回复
-        tokens = text.split()
-        if len(tokens) < 3:  # 需要至少：设置 国家 值
-            return  # 格式不正确，忽略
-        scope = tokens[1]
-        direction = "in" if "入" in text else "out"
-        key = "rate" if "费率" in text else "fx"
-        try:
-            val = float(tokens[-1])
-            if key == "rate": val /= 100.0
-            if scope == "默认": state["defaults"][direction][key] = val
-            else:
-                state["countries"].setdefault(scope, {}).setdefault(direction, {})[key] = val
-            save_group_state(chat_id)
-            await update.message.reply_text(f"✅ 已设置 {scope} {direction} {key} = {val}", parse_mode="Markdown")
-        except ValueError:
-            return  # 无效数字，忽略
-        return
+        
+        # 尝试匹配格式：设置 + 国家名 + 入/出 + 费率/汇率 + 数字
+        # 例如：设置美国入费率7, 设置美国入汇率10
+        import re
+        pattern = r'^设置\s*(.+?)(入|出)(费率|汇率)\s*(\d+(?:\.\d+)?)\s*$'
+        match = re.match(pattern, text)
+        
+        if match:
+            scope = match.group(1).strip()  # 国家名
+            direction = "in" if match.group(2) == "入" else "out"
+            key = "rate" if match.group(3) == "费率" else "fx"
+            try:
+                val = float(match.group(4))
+                if key == "rate": 
+                    val /= 100.0  # 转换为小数
+                
+                if scope == "默认":
+                    state["defaults"][direction][key] = val
+                else:
+                    state["countries"].setdefault(scope, {}).setdefault(direction, {})[key] = val
+                
+                save_group_state(chat_id)
+                
+                # 构建友好的回复消息
+                type_name = "费率" if key == "rate" else "汇率"
+                dir_name = "入金" if direction == "in" else "出金"
+                display_val = f"{val*100:.0f}%" if key == "rate" else str(val)
+                
+                await update.message.reply_text(
+                    f"✅ 已设置 {scope} {dir_name}{type_name}\n"
+                    f"📊 新值：{display_val}"
+                )
+            except ValueError:
+                await update.message.reply_text("❌ 数值格式错误")
+            return
+        else:
+            # 尝试旧格式（有空格）：设置 国家 入 费率 值
+            tokens = text.split()
+            if len(tokens) >= 3:
+                scope = tokens[1]
+                direction = "in" if "入" in text else "out"
+                key = "rate" if "费率" in text else "fx"
+                try:
+                    val = float(tokens[-1])
+                    if key == "rate": val /= 100.0
+                    if scope == "默认": 
+                        state["defaults"][direction][key] = val
+                    else:
+                        state["countries"].setdefault(scope, {}).setdefault(direction, {})[key] = val
+                    save_group_state(chat_id)
+                    await update.message.reply_text(f"✅ 已设置 {scope} {direction} {key} = {val}")
+                except ValueError:
+                    return
+                return
 
     # 入金
     if text.startswith("+"):
