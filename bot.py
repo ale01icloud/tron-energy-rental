@@ -917,21 +917,26 @@ if __name__ == "__main__":
         
         threading.Thread(target=setup_webhook, daemon=True).start()
         
-        # 自动保活机制 - 每10分钟ping一次自己防止休眠
+        # 自动保活机制 - 每5分钟ping一次自己防止Render休眠
         def keep_alive():
             import time
             time.sleep(30)  # 等待启动
-            health_url = f"{RENDER_EXTERNAL_URL}/health"
+            health_url = f"{base_url}/health"
+            print(f"🔄 保活目标: {health_url}")
+            
             while True:
-                time.sleep(600)  # 每10分钟
+                time.sleep(300)  # 每5分钟（Render免费套餐15分钟无流量会休眠）
                 try:
-                    requests.get(health_url, timeout=5)
-                    print(f"💓 保活ping成功: {datetime.datetime.now().strftime('%H:%M:%S')}")
+                    response = requests.get(health_url, timeout=10)
+                    if response.status_code == 200:
+                        print(f"💓 保活成功: {datetime.datetime.now().strftime('%H:%M:%S')}")
+                    else:
+                        print(f"⚠️ 保活响应异常: {response.status_code}")
                 except Exception as e:
-                    print(f"⚠️ 保活ping失败: {e}")
+                    print(f"❌ 保活失败: {e}")
         
         threading.Thread(target=keep_alive, daemon=True).start()
-        print("✅ 自动保活机制已启动（每10分钟ping一次）")
+        print("✅ 自动保活机制已启动（每5分钟ping一次）")
         
         # 启动Flask服务器（主进程）
         print(f"\n🚀 启动 Flask 服务器...")
