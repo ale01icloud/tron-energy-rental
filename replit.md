@@ -55,23 +55,21 @@ Or update the workflow configuration to run your preferred script.
   - Code now supports both local development and production deployment
   - Successfully uploaded project to GitHub: lea499579-stack/telegram-finance-bot
 - 2025-10-16:
-  - Fixed webhook async event loop handling using run_coroutine_threadsafe
-  - Fixed Python version compatibility (3.11.9) in render.yaml and .python-version
-  - Enhanced webhook setup with validation, error handling, and verification
-  - Added webhook URL validation to prevent empty webhook registration
-  - Fixed keep-alive mechanism: correct URL variable and 5-minute interval
-  - **Production server upgrade**: Replaced Flask dev server with Gunicorn
-  - Refactored bot.py to support Gunicorn WSGI deployment
-  - **Critical Gunicorn fix**: Changed from 2 workers to 1 worker (--workers 1 --threads 8) to prevent webhook routing conflicts
-  - **Webhook initialization rewrite**: Replaced daemon thread approach with "first-request initialization" pattern
-    - Gunicorn's gthread worker doesn't support daemon threads for async initialization
-    - Bot now initializes asynchronously on first webhook request using thread-safe pattern
-    - Non-daemon thread ensures event loop persists across all requests
   - **Private chat feature**: Added bidirectional private messaging support
     - Users can privately message the bot
     - Messages automatically forwarded to OWNER_ID (7784416293)
     - OWNER can reply through bot by replying to forwarded messages
     - All conversations logged to data/logs/private_chats/user_{id}.log
+  - **Architecture decision**: Switched from Webhook to Polling mode for production
+    - Discovered Gunicorn+asyncio incompatibility issues with webhook initialization
+    - Polling mode proved more stable and reliable for Render.com deployment
+  - **Successful deployment to Render.com**:
+    - Using Python direct execution: `python bot.py`
+    - Polling mode with HTTP health check endpoint on port 10000
+    - Configured UptimeRobot to ping /health every 5 minutes (prevents free tier sleep)
+    - Service URL: https://telegram-finance-bot-c3wn.onrender.com
+  - Created RENDER_POLLING_DEPLOY.md deployment guide
+  - Bot now running 24/7 on Render.com with UptimeRobot keep-alive
 
 ## User Preferences
 - Manual control over code execution and library installation
