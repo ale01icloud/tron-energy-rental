@@ -62,10 +62,14 @@ Or update the workflow configuration to run your preferred script.
   - Fixed keep-alive mechanism: correct URL variable and 5-minute interval
   - **Production server upgrade**: Replaced Flask dev server with Gunicorn
   - Refactored bot.py to support Gunicorn WSGI deployment
-  - Added Gunicorn with 2 workers, 4 threads per worker for production stability
+  - **Critical Gunicorn fix**: Changed from 2 workers to 1 worker (--workers 1 --threads 8) to prevent webhook routing conflicts
+  - **Webhook initialization rewrite**: Replaced daemon thread approach with "first-request initialization" pattern
+    - Gunicorn's gthread worker doesn't support daemon threads for async initialization
+    - Bot now initializes asynchronously on first webhook request using thread-safe pattern
+    - Non-daemon thread ensures event loop persists across all requests
   - **Private chat feature**: Added bidirectional private messaging support
     - Users can privately message the bot
-    - Messages automatically forwarded to OWNER_ID
+    - Messages automatically forwarded to OWNER_ID (7784416293)
     - OWNER can reply through bot by replying to forwarded messages
     - All conversations logged to data/logs/private_chats/user_{id}.log
 

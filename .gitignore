@@ -43,3 +43,6 @@ Thumbs.db
 # Environment variables
 .env
 .env.local
+
+# Replit attached assets (screenshots, debug files)
+attached_assets/
