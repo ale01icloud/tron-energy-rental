@@ -1,0 +1,138 @@
+==> Cloning from https://github.com/lea499579-stack/telegram-finance-bot
+==> Checking out commit d2f5b483a8bcd698b7d15539baba78bcd776c548 in branch main
+==> Installing Python version 3.11.9...
+==> Using Python version 3.11.9 via /opt/render/project/src/.python-version
+==> Docs on specifying a Python version: https://render.com/docs/python-version
+==> Using Poetry version 2.1.3 (default)
+==> Docs on specifying a Poetry version: https://render.com/docs/poetry-version
+==> Running build command 'pip install -r requirements.txt'...
+Collecting python-telegram-bot==21.3 (from -r requirements.txt (line 1))
+  Downloading python_telegram_bot-21.3-py3-none-any.whl.metadata (15 kB)
+Collecting Flask==3.0.3 (from -r requirements.txt (line 2))
+  Downloading flask-3.0.3-py3-none-any.whl.metadata (3.2 kB)
+Collecting python-dotenv==1.0.1 (from -r requirements.txt (line 3))
+  Downloading python_dotenv-1.0.1-py3-none-any.whl.metadata (23 kB)
+Collecting requests (from -r requirements.txt (line 4))
+  Downloading requests-2.32.5-py3-none-any.whl.metadata (4.9 kB)
+Collecting gunicorn==21.2.0 (from -r requirements.txt (line 5))
+  Downloading gunicorn-21.2.0-py3-none-any.whl.metadata (4.1 kB)
+Collecting httpx~=0.27 (from python-telegram-bot==21.3->-r requirements.txt (line 1))
+  Downloading httpx-0.28.1-py3-none-any.whl.metadata (7.1 kB)
+Collecting Werkzeug>=3.0.0 (from Flask==3.0.3->-r requirements.txt (line 2))
+  Downloading werkzeug-3.1.3-py3-none-any.whl.metadata (3.7 kB)
+Collecting Jinja2>=3.1.2 (from Flask==3.0.3->-r requirements.txt (line 2))
+  Downloading jinja2-3.1.6-py3-none-any.whl.metadata (2.9 kB)
+Collecting itsdangerous>=2.1.2 (from Flask==3.0.3->-r requirements.txt (line 2))
+  Downloading itsdangerous-2.2.0-py3-none-any.whl.metadata (1.9 kB)
+Collecting click>=8.1.3 (from Flask==3.0.3->-r requirements.txt (line 2))
+  Downloading click-8.3.0-py3-none-any.whl.metadata (2.6 kB)
+Collecting blinker>=1.6.2 (from Flask==3.0.3->-r requirements.txt (line 2))
+  Downloading blinker-1.9.0-py3-none-any.whl.metadata (1.6 kB)
+Collecting packaging (from gunicorn==21.2.0->-r requirements.txt (line 5))
+  Downloading packaging-25.0-py3-none-any.whl.metadata (3.3 kB)
+Collecting charset_normalizer<4,>=2 (from requests->-r requirements.txt (line 4))
+  Downloading charset_normalizer-3.4.4-cp311-cp311-manylinux2014_x86_64.manylinux_2_17_x86_64.manylinux_2_28_x86_64.whl.metadata (37 kB)
+Collecting idna<4,>=2.5 (from requests->-r requirements.txt (line 4))
+  Downloading idna-3.11-py3-none-any.whl.metadata (8.4 kB)
+Collecting urllib3<3,>=1.21.1 (from requests->-r requirements.txt (line 4))
+  Downloading urllib3-2.5.0-py3-none-any.whl.metadata (6.5 kB)
+Collecting certifi>=2017.4.17 (from requests->-r requirements.txt (line 4))
+  Downloading certifi-2025.10.5-py3-none-any.whl.metadata (2.5 kB)
+Collecting anyio (from httpx~=0.27->python-telegram-bot==21.3->-r requirements.txt (line 1))
+  Downloading anyio-4.11.0-py3-none-any.whl.metadata (4.1 kB)
+Collecting httpcore==1.* (from httpx~=0.27->python-telegram-bot==21.3->-r requirements.txt (line 1))
+  Downloading httpcore-1.0.9-py3-none-any.whl.metadata (21 kB)
+Collecting h11>=0.16 (from httpcore==1.*->httpx~=0.27->python-telegram-bot==21.3->-r requirements.txt (line 1))
+  Downloading h11-0.16.0-py3-none-any.whl.metadata (8.3 kB)
+Collecting MarkupSafe>=2.0 (from Jinja2>=3.1.2->Flask==3.0.3->-r requirements.txt (line 2))
+  Downloading markupsafe-3.0.3-cp311-cp311-manylinux2014_x86_64.manylinux_2_17_x86_64.manylinux_2_28_x86_64.whl.metadata (2.7 kB)
+Collecting sniffio>=1.1 (from anyio->httpx~=0.27->python-telegram-bot==21.3->-r requirements.txt (line 1))
+  Downloading sniffio-1.3.1-py3-none-any.whl.metadata (3.9 kB)
+Collecting typing_extensions>=4.5 (from anyio->httpx~=0.27->python-telegram-bot==21.3->-r requirements.txt (line 1))
+  Downloading typing_extensions-4.15.0-py3-none-any.whl.metadata (3.3 kB)
+Downloading python_telegram_bot-21.3-py3-none-any.whl (631 kB)
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 631.6/631.6 kB 16.9 MB/s eta 0:00:00
+Downloading flask-3.0.3-py3-none-any.whl (101 kB)
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 101.7/101.7 kB 9.3 MB/s eta 0:00:00
+Downloading python_dotenv-1.0.1-py3-none-any.whl (19 kB)
+Downloading gunicorn-21.2.0-py3-none-any.whl (80 kB)
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 80.2/80.2 kB 8.5 MB/s eta 0:00:00
+Downloading requests-2.32.5-py3-none-any.whl (64 kB)
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 64.7/64.7 kB 6.5 MB/s eta 0:00:00
+Downloading blinker-1.9.0-py3-none-any.whl (8.5 kB)
+Downloading certifi-2025.10.5-py3-none-any.whl (163 kB)
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 163.3/163.3 kB 16.0 MB/s eta 0:00:00
+Downloading charset_normalizer-3.4.4-cp311-cp311-manylinux2014_x86_64.manylinux_2_17_x86_64.manylinux_2_28_x86_64.whl (151 kB)
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 151.6/151.6 kB 15.3 MB/s eta 0:00:00
+Downloading click-8.3.0-py3-none-any.whl (107 kB)
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 107.3/107.3 kB 10.8 MB/s eta 0:00:00
+Downloading httpx-0.28.1-py3-none-any.whl (73 kB)
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 73.5/73.5 kB 7.4 MB/s eta 0:00:00
+Downloading httpcore-1.0.9-py3-none-any.whl (78 kB)
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 78.8/78.8 kB 7.8 MB/s eta 0:00:00
+Downloading idna-3.11-py3-none-any.whl (71 kB)
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 71.0/71.0 kB 5.4 MB/s eta 0:00:00
+Downloading itsdangerous-2.2.0-py3-none-any.whl (16 kB)
+Downloading jinja2-3.1.6-py3-none-any.whl (134 kB)
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 134.9/134.9 kB 13.5 MB/s eta 0:00:00
+Downloading urllib3-2.5.0-py3-none-any.whl (129 kB)
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 129.8/129.8 kB 13.1 MB/s eta 0:00:00
+Downloading werkzeug-3.1.3-py3-none-any.whl (224 kB)
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 224.5/224.5 kB 20.8 MB/s eta 0:00:00
+Downloading packaging-25.0-py3-none-any.whl (66 kB)
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 66.5/66.5 kB 6.3 MB/s eta 0:00:00
+Downloading markupsafe-3.0.3-cp311-cp311-manylinux2014_x86_64.manylinux_2_17_x86_64.manylinux_2_28_x86_64.whl (22 kB)
+Downloading anyio-4.11.0-py3-none-any.whl (109 kB)
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 109.1/109.1 kB 9.2 MB/s eta 0:00:00
+Downloading h11-0.16.0-py3-none-any.whl (37 kB)
+Downloading sniffio-1.3.1-py3-none-any.whl (10 kB)
+Downloading typing_extensions-4.15.0-py3-none-any.whl (44 kB)
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 44.6/44.6 kB 4.0 MB/s eta 0:00:00
+Installing collected packages: urllib3, typing_extensions, sniffio, python-dotenv, packaging, MarkupSafe, itsdangerous, idna, h11, click, charset_normalizer, certifi, blinker, Werkzeug, requests, Jinja2, httpcore, gunicorn, anyio, httpx, Flask, python-telegram-bot
+Successfully installed Flask-3.0.3 Jinja2-3.1.6 MarkupSafe-3.0.3 Werkzeug-3.1.3 anyio-4.11.0 blinker-1.9.0 certifi-2025.10.5 charset_normalizer-3.4.4 click-8.3.0 gunicorn-21.2.0 h11-0.16.0 httpcore-1.0.9 httpx-0.28.1 idna-3.11 itsdangerous-2.2.0 packaging-25.0 python-dotenv-1.0.1 python-telegram-bot-21.3 requests-2.32.5 sniffio-1.3.1 typing_extensions-4.15.0 urllib3-2.5.0
+[notice] A new release of pip is available: 24.0 -> 25.2
+[notice] To update, run: pip install --upgrade pip
+==> Uploading build...
+==> Uploaded in 9.0s. Compression took 2.9s
+==> Build successful 🎉
+==> Deploying...
+==> Running 'gunicorn --bind 0.0.0.0:$PORT --workers 1 --threads 8 --timeout 120 bot:app'
+[2025-10-16 09:18:49 +0000] [56] [INFO] Starting gunicorn 21.2.0
+[2025-10-16 09:18:49 +0000] [56] [INFO] Listening at: http://0.0.0.0:10000 (56)
+[2025-10-16 09:18:49 +0000] [56] [INFO] Using worker: gthread
+[2025-10-16 09:18:49 +0000] [59] [INFO] Booting worker with pid: 59
+==================================================
+🚀 正在启动财务记账机器人...
+==================================================
+✅ Bot Token 已加载
+📊 数据目录: data
+👑 超级管理员: 7784416293
+🤖 配置 Telegram Bot...
+🌐 使用 Webhook 模式
+📡 Webhook URL: https://telegram-finance-bot-k6l5.onrender.com/7700613253:AAGpRMN2iXJqzbNk9brtfgWljRpsTE59uTE
+🔌 监听端口: 10000
+✅ Bot 处理器已注册
+✅ 自动保活机制已启动（每5分钟ping一次）
+✅ Webhook模式初始化完成
+==================================================
+127.0.0.1 - - [16/Oct/2025:09:18:49 +0000] "HEAD / HTTP/1.1" 200 0 "-" "Go-http-client/1.1"
+==> Your service is live 🎉
+==> 
+==> ///////////////////////////////////////////////////////////
+==> 
+==> Available at your primary URL https://telegram-finance-bot-k6l5.onrender.com
+==> 
+==> ///////////////////////////////////////////////////////////
+127.0.0.1 - - [16/Oct/2025:09:18:54 +0000] "GET / HTTP/1.1" 200 41 "-" "Go-http-client/2.0"
+⚠️ Bot尚未初始化完成，application=Application[bot=ExtBot[token=7700613253:AAGpRMN2iXJqzbNk9brtfgWljRpsTE59uTE]], loop=None
+127.0.0.1 - - [16/Oct/2025:09:19:17 +0000] "POST /7700613253:AAGpRMN2iXJqzbNk9brtfgWljRpsTE59uTE HTTP/1.1" 503 19 "-" "-"
+⚠️ Bot尚未初始化完成，application=Application[bot=ExtBot[token=7700613253:AAGpRMN2iXJqzbNk9brtfgWljRpsTE59uTE]], loop=None
+127.0.0.1 - - [16/Oct/2025:09:19:17 +0000] "POST /7700613253:AAGpRMN2iXJqzbNk9brtfgWljRpsTE59uTE HTTP/1.1" 503 19 "-" "-"
+⚠️ Bot尚未初始化完成，application=Application[bot=ExtBot[token=7700613253:AAGpRMN2iXJqzbNk9brtfgWljRpsTE59uTE]], loop=None
+127.0.0.1 - - [16/Oct/2025:09:19:19 +0000] "POST /7700613253:AAGpRMN2iXJqzbNk9brtfgWljRpsTE59uTE HTTP/1.1" 503 19 "-" "-"
+⚠️ Bot尚未初始化完成，application=Application[bot=ExtBot[token=7700613253:AAGpRMN2iXJqzbNk9brtfgWljRpsTE59uTE]], loop=None
+127.0.0.1 - - [16/Oct/2025:09:19:23 +0000] "POST /7700613253:AAGpRMN2iXJqzbNk9brtfgWljRpsTE59uTE HTTP/1.1" 503 19 "-" "-"
+⚠️ Bot尚未初始化完成，application=Application[bot=ExtBot[token=7700613253:AAGpRMN2iXJqzbNk9brtfgWljRpsTE59uTE]], loop=None
+127.0.0.1 - - [16/Oct/2025:09:19:32 +0000] "POST /7700613253:AAGpRMN2iXJqzbNk9brtfgWljRpsTE59uTE HTTP/1.1" 503 19 "-" "-"
+⚠️ Bot尚未初始化完成，application=Application[bot=ExtBot[token=7700613253:AAGpRMN2iXJqzbNk9brtfgWljRpsTE59uTE]], loop=None
+127.0.0.1 - - [16/Oct/2025:09:19:48 +0000] "POST /7700613253:AAGpRMN2iXJqzbNk9brtfgWljRpsTE59uTE HTTP/1.1" 503 19 "-" "-"
