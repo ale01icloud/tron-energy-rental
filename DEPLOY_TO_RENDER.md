@@ -40,7 +40,7 @@
    - **Name**: telegram-accounting-bot（或自定义名称）
    - **Environment**: Python 3
    - **Build Command**: `pip install -r requirements.txt`
-   - **Start Command**: `python bot.py`
+   - **Start Command**: `gunicorn --bind 0.0.0.0:$PORT --workers 2 --threads 4 --timeout 120 bot:app`
 
 3. **设置环境变量**
    - 在"Environment"标签下添加：
@@ -56,6 +56,41 @@
 5. **部署**
    - 点击"Create Web Service"
    - 等待部署完成
+
+## 🔄 更新现有服务到Gunicorn生产服务器
+
+**重要**：如果您已经部署了服务且看到Flask开发服务器警告，需要手动更新启动命令：
+
+### 步骤：
+
+1. **登录Render Dashboard**
+   - 访问 https://dashboard.render.com
+   - 找到您的服务（telegram-accounting-bot）
+
+2. **更新启动命令**
+   - 点击服务名称进入详情页
+   - 点击左侧 **"Settings"** 标签
+   - 找到 **"Start Command"** 设置
+   - 修改为以下命令：
+     ```bash
+     gunicorn --bind 0.0.0.0:$PORT --workers 2 --threads 4 --timeout 120 bot:app
+     ```
+   - 点击 **"Save Changes"**
+
+3. **重新部署**
+   - 返回服务详情页
+   - 点击右上角 **"Manual Deploy"** → **"Deploy latest commit"**
+   - 等待部署完成
+
+4. **验证成功**
+   - 查看日志，应该看到：
+     ```
+     [INFO] Starting gunicorn 21.2.0
+     [INFO] Listening at: http://0.0.0.0:10000
+     ```
+   - **不再显示Flask开发服务器警告**
+
+---
 
 ## ⚙️ 重要配置说明
 
