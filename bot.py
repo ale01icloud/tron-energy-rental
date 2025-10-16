@@ -28,22 +28,6 @@ def health_check():
 def health():
     return "ok", 200
 
-@app.get("/init")
-def manual_init():
-    """手动触发bot初始化"""
-    if BotContainer.loop:
-        return "Already initialized", 200
-    
-    if not BotContainer.init_started:
-        with BotContainer.init_lock:
-            if not BotContainer.init_started:
-                BotContainer.init_started = True
-                print("🔧 手动触发异步初始化...")
-                threading.Thread(target=_init_bot_async, daemon=False).start()
-                return "Initialization started", 200
-    
-    return "Initialization in progress", 202
-
 @app.post("/<token>")
 def webhook(token):
     """处理Telegram webhook请求"""
@@ -51,17 +35,8 @@ def webhook(token):
         print(f"❌ Token不匹配: {token[:20]}...")
         return "Unauthorized", 401
     
-    # 首次请求时启动异步初始化
-    if not BotContainer.init_started:
-        with BotContainer.init_lock:
-            if not BotContainer.init_started:
-                BotContainer.init_started = True
-                print("🔄 首次webhook请求，启动异步初始化...")
-                threading.Thread(target=_init_bot_async, daemon=False).start()
-    
-    # 检查初始化状态
     if not BotContainer.loop:
-        print(f"⏳ Bot正在初始化中，请稍候...")
+        print(f"⏳ Bot尚未初始化完成")
         return "Service Unavailable", 503
     
     try:
@@ -84,42 +59,6 @@ def webhook(token):
         import traceback
         traceback.print_exc()
         return "error", 500
-
-def _init_bot_async():
-    """异步初始化bot（由首次webhook触发）"""
-    import asyncio
-    import time
-    time.sleep(1)  # 短暂延迟确保Flask就绪
-    
-    async def setup():
-        try:
-            base_url = os.getenv("WEBHOOK_URL") or os.getenv("RENDER_EXTERNAL_URL")
-            webhook_url = f"{base_url}/{BOT_TOKEN}"
-            
-            async with BotContainer.application:
-                BotContainer.loop = asyncio.get_running_loop()
-                print("✅ Bot事件循环已创建")
-                
-                await BotContainer.application.bot.delete_webhook(drop_pending_updates=True)
-                print("🗑️ 已清除旧webhook")
-                
-                success = await BotContainer.application.bot.set_webhook(
-                    url=webhook_url,
-                    drop_pending_updates=False,
-                    allowed_updates=["message"]
-                )
-                print(f"✅ Webhook设置{'成功' if success else '失败'}: {webhook_url}")
-                
-                await BotContainer.application.start()
-                print("✅ Bot application已启动")
-                
-                await asyncio.Event().wait()
-        except Exception as e:
-            print(f"❌ 异步初始化错误: {e}")
-            import traceback
-            traceback.print_exc()
-    
-    asyncio.run(setup())
 
 # ========== 记账核心状态（多群组支持）==========
 DATA_DIR = Path("./data")
@@ -1029,12 +968,48 @@ def init_bot():
         print(f"📡 Webhook URL: {webhook_url}")
         print(f"🔌 监听端口: {port}")
         
-        # 创建bot application（异步初始化由首次webhook请求触发）
+        # 创建bot application
         BotContainer.application = ApplicationBuilder().token(BOT_TOKEN).build()
         BotContainer.application.add_handler(CommandHandler("start", cmd_start))
         BotContainer.application.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, handle_text))
         print("✅ Bot 处理器已注册")
-        print("💡 Bot将在首次webhook请求时完成异步初始化")
+        
+        # 立即启动异步初始化（非daemon线程）
+        def setup_webhook_async():
+            import asyncio
+            import time
+            time.sleep(2)  # 等待Flask完全启动
+            
+            async def init():
+                try:
+                    async with BotContainer.application:
+                        BotContainer.loop = asyncio.get_running_loop()
+                        print("✅ Bot事件循环已创建")
+                        
+                        await BotContainer.application.bot.delete_webhook(drop_pending_updates=True)
+                        print("🗑️ 已清除旧webhook")
+                        
+                        success = await BotContainer.application.bot.set_webhook(
+                            url=webhook_url,
+                            drop_pending_updates=False,
+                            allowed_updates=["message"]
+                        )
+                        print(f"✅ Webhook设置{'成功' if success else '失败'}: {webhook_url}")
+                        
+                        await BotContainer.application.start()
+                        print("✅ Bot application已启动")
+                        
+                        # 保持事件循环运行
+                        await asyncio.Event().wait()
+                except Exception as e:
+                    print(f"❌ Webhook初始化错误: {e}")
+                    import traceback
+                    traceback.print_exc()
+            
+            asyncio.run(init())
+        
+        threading.Thread(target=setup_webhook_async, daemon=False).start()
+        print("🔄 异步初始化线程已启动")
         
         # 自动保活机制 - 每5分钟ping一次自己防止Render休眠
         def keep_alive():
