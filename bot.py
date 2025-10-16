@@ -462,10 +462,103 @@ async def cmd_start(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
 async def handle_text(update: Update, context: ContextTypes.DEFAULT_TYPE):
     user = update.effective_user
-    chat_id = update.effective_chat.id
+    chat = update.effective_chat
+    chat_id = chat.id
     text = (update.message.text or "").strip()
     ts, dstr = now_ts(), today_str()
     
+    # ========== 私聊消息转发功能 ==========
+    if chat.type == "private":
+        # 记录私聊日志
+        private_log_dir = LOG_DIR / "private_chats"
+        private_log_dir.mkdir(exist_ok=True)
+        user_log_file = private_log_dir / f"user_{user.id}.log"
+        
+        log_entry = f"[{ts}] {user.full_name} (@{user.username or 'N/A'}): {text}\n"
+        with open(user_log_file, "a", encoding="utf-8") as f:
+            f.write(log_entry)
+        
+        # 如果设置了OWNER_ID，且发送者不是OWNER，则转发给OWNER
+        if OWNER_ID and OWNER_ID.isdigit():
+            owner_id = int(OWNER_ID)
+            
+            if user.id != owner_id:
+                # 非OWNER发送的私聊消息 - 转发给OWNER
+                try:
+                    user_info = f"👤 {user.full_name}"
+                    if user.username:
+                        user_info += f" (@{user.username})"
+                    user_info += f"\n🆔 User ID: {user.id}"
+                    
+                    forward_msg = (
+                        f"📨 收到私聊消息\n"
+                        f"{user_info}\n"
+                        f"━━━━━━━━━━━━━━━━━━━━\n"
+                        f"{text}\n"
+                        f"━━━━━━━━━━━━━━━━━━━━\n"
+                        f"💡 回复此消息可直接回复用户"
+                    )
+                    
+                    # 转发给OWNER并存储消息ID用于回复
+                    sent_msg = await context.bot.send_message(
+                        chat_id=owner_id,
+                        text=forward_msg
+                    )
+                    
+                    # 存储映射关系: OWNER收到的消息ID -> 原始用户ID
+                    # 用于OWNER回复时知道发给谁
+                    if 'private_msg_map' not in context.bot_data:
+                        context.bot_data['private_msg_map'] = {}
+                    context.bot_data['private_msg_map'][sent_msg.message_id] = user.id
+                    
+                    # 给用户回复确认消息
+                    await update.message.reply_text(
+                        "✅ 您的消息已发送给客服\n"
+                        "⏳ 请耐心等待回复"
+                    )
+                    return
+                    
+                except Exception as e:
+                    print(f"转发私聊消息失败: {e}")
+                    # 继续处理，不影响后续逻辑
+            else:
+                # OWNER发送的私聊消息 - 检查是否是回复转发的消息
+                if update.message.reply_to_message:
+                    replied_msg_id = update.message.reply_to_message.message_id
+                    
+                    # 检查是否有映射关系
+                    if 'private_msg_map' in context.bot_data:
+                        target_user_id = context.bot_data['private_msg_map'].get(replied_msg_id)
+                        
+                        if target_user_id:
+                            # OWNER正在回复某个用户的私聊
+                            try:
+                                await context.bot.send_message(
+                                    chat_id=target_user_id,
+                                    text=f"💬 客服回复：\n\n{text}"
+                                )
+                                await update.message.reply_text("✅ 回复已发送")
+                                
+                                # 记录回复日志到目标用户的日志文件
+                                target_log_file = private_log_dir / f"user_{target_user_id}.log"
+                                reply_log_entry = f"[{ts}] OWNER回复: {text}\n"
+                                with open(target_log_file, "a", encoding="utf-8") as f:
+                                    f.write(reply_log_entry)
+                                
+                                return
+                            except Exception as e:
+                                await update.message.reply_text(f"❌ 发送失败: {e}")
+                                return
+                
+                # OWNER发送的非回复私聊消息 - 提示用法
+                await update.message.reply_text(
+                    "💡 使用提示：\n"
+                    "• 回复转发的消息可以回复用户\n"
+                    "• 在群组中使用记账功能"
+                )
+                return
+    
+    # ========== 群组消息处理 ==========
     # 检查日期并在需要时重置账单（每个群组独立）
     check_and_reset_daily(chat_id)
     
