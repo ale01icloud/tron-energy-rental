@@ -63,6 +63,11 @@ Or update the workflow configuration to run your preferred script.
   - **Production server upgrade**: Replaced Flask dev server with Gunicorn
   - Refactored bot.py to support Gunicorn WSGI deployment
   - Added Gunicorn with 2 workers, 4 threads per worker for production stability
+  - **Private chat feature**: Added bidirectional private messaging support
+    - Users can privately message the bot
+    - Messages automatically forwarded to OWNER_ID
+    - OWNER can reply through bot by replying to forwarded messages
+    - All conversations logged to data/logs/private_chats/user_{id}.log
 
 ## User Preferences
 - Manual control over code execution and library installation
@@ -80,5 +85,10 @@ Or update the workflow configuration to run your preferred script.
   - Rate and exchange settings
   - Daily reset schedule
   - Transaction logs
+- **Private chat support**: 
+  - Users can privately message the bot
+  - All private messages are forwarded to the bot owner (OWNER_ID)
+  - Owner can reply to users through the bot
+  - All conversations are logged in data/logs/private_chats/
 - Data persistence with per-group JSON files (data/groups/group_<chat_id>.json)
 - HTTP keepalive server on port 5000
