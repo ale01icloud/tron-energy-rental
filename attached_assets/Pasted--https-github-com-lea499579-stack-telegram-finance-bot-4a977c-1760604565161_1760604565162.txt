@@ -1,0 +1,99 @@
+==>正在下载缓存...  
+==>从https://github.com/lea499579-stack/telegram-finance-bot克隆   
+==>在主分支中检出提交4a977c7ffb037d7e2c0f541b3fe93f61c5991482       
+==> 8 秒内传输了68MB 。提取耗时1 秒。       
+==>正在安装Python版本3.11.9...    
+==>通过/opt/render/project/src/.python-version使用Python版本3.11.9      
+==>有关指定Python版本的文档：https://render.com/docs/python-version       
+==>使用Poetry版本2.1.3 （默认）     
+==>指定诗歌版本的文档：https://render.com/docs/poetry-version       
+==>运行构建命令“pip install -r requirements.txt”...       
+收集 python-telegram-bot==21.3  （来自 -r  requirements.txt  （第 1 行））
+  使用 缓存的 python_telegram_bot-21.3-py3-none-any.whl.metadata  (15  kB)
+收集 Flask==3.0.3  （来自 -r  requirements.txt  （ 第 2 行））
+  使用 缓存的 flask-3.0.3-py3-none-any.whl.metadata  (3.2  kB)
+收集 python-dotenv==1.0.1  （来自 -r  requirements.txt  （ 第 3 行））
+  使用 缓存的 python_dotenv-1.0.1-py3-none-any.whl.metadata  (23  kB)
+收集 请求 （来自 -r  requirements.txt  （第 4 行））
+  使用 缓存 请求-2.32.5-py3-none-any.whl.metadata  (4.9  kB)
+收集 gunicorn==21.2.0  （来自 -r  requirements.txt  （第 5 行））
+  使用 缓存的 gunicorn-21.2.0-py3-none-any.whl.metadata  (4.1  kB)
+收集 httpx~=0.27  （来自 python-telegram-bot==21.3->-r  requirements.txt  （第 1 行））
+  使用 缓存的 httpx-0.28.1-py3-none-any.whl.metadata  (7.1  kB)
+收集 Werkzeug>=3.0.0  （来自 Flask==3.0.3->-r  requirements.txt  （第 2 行））
+  使用 缓存的 werkzeug-3.1.3-py3-none-any.whl.metadata  (3.7  kB)
+收集 Jinja2>=3.1.2  （来自 Flask==3.0.3->-r  requirements.txt  （第 2 行））
+  使用 缓存的 jinja2-3.1.6-py3-none-any.whl.metadata  (2.9  kB)
+收集 itsdangerous>=2.1.2  （来自 Flask==3.0.3->-r  requirements.txt  （第 2 行））
+  使用 缓存的 itsdangerous-2.2.0-py3-none-any.whl.metadata  (1.9  kB)
+收集 click>=8.1.3  （来自 Flask==3.0.3->-r  requirements.txt  （第 2 行））
+  使用 缓存的 click-8.3.0-py3-none-any.whl.metadata  (2.6  kB)
+收集 blinker>=1.6.2  （来自 Flask==3.0.3->-r  requirements.txt  （第 2 行））
+  使用 缓存的 blinker-1.9.0-py3-none-any.whl.metadata  (1.6  kB)
+收集 包装 （来自 gunicorn==21.2.0->-r  requirements.txt  （第 5 行））
+  使用 缓存的 packaging-25.0-py3-none-any.whl.metadata  (3.3  kB)
+收集 charset_normalizer<4,>=2  （来自 请求->-r  requirements.txt  （第 4 行））
+  使用 缓存的 charset_normalizer-3.4.4-cp311-cp311-manylinux2014_x86_64.manylinux_2_17_x86_64.manylinux_2_28_x86_64.whl.metadata  (37  kB)
+收集 idna<4,>=2.5  （来自 请求->-r  requirements.txt  （第 4 行））
+  使用 缓存的 idna-3.11-py3-none-any.whl.metadata  (8.4  kB)
+收集 urllib3<3,>=1.21.1  （来自 请求->-r  requirements.txt  （第 4 行））
+  使用 缓存的 urllib3-2.5.0-py3-none-any.whl.metadata  (6.5  kB)
+收集 certifi>=2017.4.17  （来自 请求->-r  requirements.txt  （第 4 行））
+  使用 缓存的 certifi-2025.10.5-py3-none-any.whl.metadata  (2.5  kB)
+收集 anyio  （来自 httpx~=0.27->python-telegram-bot==21.3->-r  requirements.txt  （第 1 行））
+  使用 缓存的 anyio-4.11.0-py3-none-any.whl.metadata  (4.1  kB)
+收集 httpcore==1.*  （来自 httpx~=0.27->python-telegram-bot==21.3->-r  requirements.txt  （第 1 行））
+  使用 缓存的 httpcore-1.0.9-py3-none-any.whl.metadata  (21  kB)
+收集 h11>=0.16  （来自 httpcore==1.*->httpx~=0.27->python-telegram-bot==21.3->-r  requirements.txt  （ 第 1 行））
+  使用 缓存的 h11-0.16.0-py3-none-any.whl.metadata  (8.3  kB)
+收集 MarkupSafe>=2.0  （来自 Jinja2>=3.1.2->Flask==3.0.3->-r  requirements.txt  （第 2 行））
+  使用 缓存的 markupsafe-3.0.3-cp311-cp311-manylinux2014_x86_64.manylinux_2_17_x86_64.manylinux_2_28_x86_64.whl.metadata  (2.7  kB)
+收集 sniffio>=1.1  （来自 anyio->httpx~=0.27->python-telegram-bot==21.3->-r  requirements.txt  （第 1 行））
+  使用 缓存的 sniffio-1.3.1-py3-none-any.whl.metadata  (3.9  kB)
+收集 Typing_extensions>=4.5  （来自 anyio->httpx~=0.27->python-telegram-bot==21.3->-r  requirements.txt  （ 第 1 行））
+  使用 缓存的 typing_extensions-4.15.0-py3-none-any.whl.metadata  (3.3  kB)
+使用 缓存的 python_telegram_bot-21.3-py3-none-any.whl  (631  kB)
+使用 缓存的 flask-3.0.3-py3-none-any.whl  (101  kB)
+使用 缓存的 python_dotenv-1.0.1-py3-none-any.whl  (19  kB)
+使用 缓存的 gunicorn-21.2.0-py3-none-any.whl  (80  kB)
+使用 缓存 请求-2.32.5-py3-none-any.whl  (64  kB)
+使用 缓存的 blinker-1.9.0-py3-none-any.whl  (8.5  kB)
+使用 缓存的 certifi-2025.10.5-py3-none-any.whl  (163  kB)
+使用 缓存的 charset_normalizer-3.4.4-cp311-cp311-manylinux2014_x86_64.manylinux_2_17_x86_64.manylinux_2_28_x86_64.whl  (151  kB)
+使用 缓存的 click-8.3.0-py3-none-any.whl  (107  kB)
+使用 缓存的 httpx-0.28.1-py3-none-any.whl  (73  kB)
+使用 缓存的 httpcore-1.0.9-py3-none-any.whl  (78  kB)
+使用 缓存的 idna-3.11-py3-none-any.whl  (71  kB)
+使用 缓存的 itsdangerous-2.2.0-py3-none-any.whl  (16  kB)
+使用 缓存的 jinja2-3.1.6-py3-none-any.whl  (134  kB)
+使用 缓存的 urllib3-2.5.0-py3-none-any.whl  (129  kB)
+使用 缓存的 werkzeug-3.1.3-py3-none-any.whl  (224  kB)
+使用 缓存的 packaging-25.0-py3-none-any.whl  (66  kB)
+使用 缓存的 markupsafe-3.0.3-cp311-cp311-manylinux2014_x86_64.manylinux_2_17_x86_64.manylinux_2_28_x86_64.whl  (22  kB)
+使用 缓存的 anyio-4.11.0-py3-none-any.whl  (109  kB)
+使用 缓存的 h11-0.16.0-py3-none-any.whl  (37  kB)
+使用 缓存的 sniffio-1.3.1-py3-none-any.whl  (10  kB)
+使用 缓存的 Typing_extensions-4.15.0-py3-none-any.whl  (44  kB)
+安装 收集的 软件包： urllib3、 typing_extensions、 sniffio、 python-dotenv、 packaging、 MarkupSafe、 itsdangerous、 idna、 h11、 click、 charset_normalizer、 certifi、 blinker、 Werkzeug、 requests、 Jinja2、 httpcore、 gunicorn、 anyio、 httpx、 Flask、 python-telegram-bot
+成功 安装 Flask-3.0.3  Jinja2-3.1.6  MarkupSafe-3.0.3  Werkzeug-3.1.3  anyio-4.11.0  blinker-1.9.0  certifi-2025.10.5  charset_normalizer-3.4.4  click-8.3.0  gunicorn-21.2.0  h11-0.16.0  httpcore-1.0.9  httpx-0.28.1  idna-3.11  itsdangerous-2.2.0  packaging-25.0  python-dotenv-1.0.1  python-telegram-bot-21.3  requests-2.32.5  sniffio-1.3.1  typing_extensions-4.15.0  urllib3-2.5.0
+[通知] pip新 版本发布：24.0 - > 25.2         
+[注意] 要 更新， 请运行： pip  install  --upgrade  pip
+==>正在上传构建...  
+==>上传耗时9.2秒。压缩耗时3.2 秒      
+==>构建成功🎉   
+==> 正在部署...
+==>运行‘gunicorn --bind 0.0.0.0:$PORT --workers 2 --threads 4 --timeout 120 bot:app’           
+[2025-10-16  08:48:26  +0000]  [54]  [信息] 启动 gunicorn  21.2.0
+[2025-10-16  08:48:26  +0000]  [54]  [INFO] 正在监听 ：http://0.0.0.0 :10000 (54)  
+[2025-10-16  08:48:26  +0000]  [54]  [INFO] 使用 工作线程： gthread
+[2025-10-16  08:48:26  +0000]  [56]  [INFO] 正在启动 进程， 进程 号为 56
+[2025-10-16  08:48:27  +0000]  [57]  [INFO] 正在启动 进程，进程号 为57  
+127.0.0.1  -  -  [16/Oct/2025:08:48:27  +0000]  "HEAD  /  HTTP/1.1"  200  0  "-"  "Go-http-client/1.1"
+==> 您的 服务 已 上线 🎉
+==> 
+==>  ///////////////////////////////////////////////////////////
+==> 
+==>可在 您的主URL https://telegram-finance-bot-nujq.onrender.com上获取     
+==> 
+==>  ///////////////////////////////////////////////////////////
+127.0.0.1  -  -  [16/Oct/2025:08:48:29  +0000]  "GET  /  HTTP/1.1"  200  41  "-"  "Go-http-client/2.0"
