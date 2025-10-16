@@ -54,10 +54,15 @@ Or update the workflow configuration to run your preferred script.
   - Added dual-mode support: Polling (Replit) + Webhook (Render Web Service)
   - Code now supports both local development and production deployment
   - Successfully uploaded project to GitHub: lea499579-stack/telegram-finance-bot
+- 2025-10-16:
   - Fixed webhook async event loop handling using run_coroutine_threadsafe
   - Fixed Python version compatibility (3.11.9) in render.yaml and .python-version
   - Enhanced webhook setup with validation, error handling, and verification
   - Added webhook URL validation to prevent empty webhook registration
+  - Fixed keep-alive mechanism: correct URL variable and 5-minute interval
+  - **Production server upgrade**: Replaced Flask dev server with Gunicorn
+  - Refactored bot.py to support Gunicorn WSGI deployment
+  - Added Gunicorn with 2 workers, 4 threads per worker for production stability
 
 ## User Preferences
 - Manual control over code execution and library installation
