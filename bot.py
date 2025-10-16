@@ -29,8 +29,13 @@ def health():
 @app.post("/<token>")
 def webhook(token):
     """处理Telegram webhook请求"""
-    if token != BOT_TOKEN or not BotContainer.application or not BotContainer.loop:
+    if token != BOT_TOKEN:
+        print(f"❌ Token不匹配: {token[:20]}...")
         return "Unauthorized", 401
+    
+    if not BotContainer.application or not BotContainer.loop:
+        print(f"⚠️ Bot尚未初始化完成，application={BotContainer.application}, loop={BotContainer.loop}")
+        return "Service Unavailable", 503
     
     try:
         from telegram import Update
@@ -48,7 +53,7 @@ def webhook(token):
         
         return "ok", 200
     except Exception as e:
-        print(f"Webhook错误: {e}")
+        print(f"❌ Webhook处理错误: {e}")
         import traceback
         traceback.print_exc()
         return "error", 500
