@@ -974,42 +974,48 @@ def init_bot():
         BotContainer.application.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, handle_text))
         print("✅ Bot 处理器已注册")
         
-        # 立即启动异步初始化（非daemon线程）
-        def setup_webhook_async():
+        # 使用独立事件循环线程（兼容Gunicorn）
+        def setup_webhook_thread():
             import asyncio
             import time
             time.sleep(2)  # 等待Flask完全启动
             
+            # 创建新的事件循环（Gunicorn兼容）
+            loop = asyncio.new_event_loop()
+            asyncio.set_event_loop(loop)
+            BotContainer.loop = loop
+            print("✅ Bot事件循环已创建")
+            
             async def init():
                 try:
-                    async with BotContainer.application:
-                        BotContainer.loop = asyncio.get_running_loop()
-                        print("✅ Bot事件循环已创建")
-                        
-                        await BotContainer.application.bot.delete_webhook(drop_pending_updates=True)
-                        print("🗑️ 已清除旧webhook")
-                        
-                        success = await BotContainer.application.bot.set_webhook(
-                            url=webhook_url,
-                            drop_pending_updates=False,
-                            allowed_updates=["message"]
-                        )
-                        print(f"✅ Webhook设置{'成功' if success else '失败'}: {webhook_url}")
-                        
-                        await BotContainer.application.start()
-                        print("✅ Bot application已启动")
-                        
-                        # 保持事件循环运行
-                        await asyncio.Event().wait()
+                    await BotContainer.application.initialize()
+                    print("✅ Bot application已初始化")
+                    
+                    await BotContainer.application.bot.delete_webhook(drop_pending_updates=True)
+                    print("🗑️ 已清除旧webhook")
+                    
+                    success = await BotContainer.application.bot.set_webhook(
+                        url=webhook_url,
+                        drop_pending_updates=False,
+                        allowed_updates=["message"]
+                    )
+                    print(f"✅ Webhook设置{'成功' if success else '失败'}: {webhook_url}")
+                    
+                    await BotContainer.application.start()
+                    print("✅ Bot application已启动")
                 except Exception as e:
                     print(f"❌ Webhook初始化错误: {e}")
                     import traceback
                     traceback.print_exc()
             
-            asyncio.run(init())
+            # 运行初始化
+            loop.run_until_complete(init())
+            
+            # 保持事件循环运行（处理webhook请求）
+            loop.run_forever()
         
-        threading.Thread(target=setup_webhook_async, daemon=False).start()
-        print("🔄 异步初始化线程已启动")
+        threading.Thread(target=setup_webhook_thread, daemon=False).start()
+        print("🔄 事件循环线程已启动")
         
         # 自动保活机制 - 每5分钟ping一次自己防止Render休眠
         def keep_alive():
