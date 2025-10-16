@@ -28,6 +28,22 @@ def health_check():
 def health():
     return "ok", 200
 
+@app.get("/init")
+def manual_init():
+    """手动触发bot初始化"""
+    if BotContainer.loop:
+        return "Already initialized", 200
+    
+    if not BotContainer.init_started:
+        with BotContainer.init_lock:
+            if not BotContainer.init_started:
+                BotContainer.init_started = True
+                print("🔧 手动触发异步初始化...")
+                threading.Thread(target=_init_bot_async, daemon=False).start()
+                return "Initialization started", 200
+    
+    return "Initialization in progress", 202
+
 @app.post("/<token>")
 def webhook(token):
     """处理Telegram webhook请求"""
