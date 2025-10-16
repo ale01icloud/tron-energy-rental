@@ -821,8 +821,9 @@ async def handle_text(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
     # 无效操作不回复
 
-# ========== 启动 ==========
-if __name__ == "__main__":
+# ========== 初始化函数（支持Gunicorn） ==========
+def init_bot():
+    """初始化Bot - 在Gunicorn启动时或直接运行时调用"""
     print("=" * 50)
     print("🚀 正在启动财务记账机器人...")
     print("=" * 50)
@@ -938,10 +939,10 @@ if __name__ == "__main__":
         threading.Thread(target=keep_alive, daemon=True).start()
         print("✅ 自动保活机制已启动（每5分钟ping一次）")
         
-        # 启动Flask服务器（主进程）
-        print(f"\n🚀 启动 Flask 服务器...")
+        print(f"\n✅ Webhook模式初始化完成")
         print("=" * 50)
-        app.run(host="0.0.0.0", port=port, use_reloader=False, threaded=True)
+        # 注意：不调用app.run()，让Gunicorn管理Flask应用
+        
     else:
         # Polling模式（本地开发/Replit）
         print("\n🔄 使用 Polling 模式（本地开发）")
@@ -960,3 +961,20 @@ if __name__ == "__main__":
         print("\n🎉 机器人正在运行，等待消息...")
         print("=" * 50)
         application.run_polling()
+
+# ========== Gunicorn入口：模块导入时初始化 ==========
+# 当Gunicorn导入此模块时，自动初始化Bot（仅在Webhook模式）
+if os.getenv("USE_WEBHOOK", "false").lower() == "true":
+    init_bot()
+
+# ========== 直接运行支持 ==========
+if __name__ == "__main__":
+    # 直接运行python bot.py时
+    if os.getenv("USE_WEBHOOK", "false").lower() != "true":
+        # Polling模式才需要调用init_bot
+        init_bot()
+    else:
+        # Webhook模式：init_bot已在模块级别调用，这里启动Flask
+        print("🚀 启动 Flask 开发服务器...")
+        port = int(os.getenv("PORT", "10000"))
+        app.run(host="0.0.0.0", port=port, use_reloader=False, threaded=True)
