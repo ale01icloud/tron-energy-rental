@@ -3,7 +3,7 @@ services:
     name: telegram-accounting-bot
     env: python
     buildCommand: "pip install -r requirements.txt"
-    startCommand: "gunicorn --bind 0.0.0.0:$PORT --workers 1 --threads 8 --timeout 120 bot:app"
+    startCommand: "python bot.py"
     envVars:
       - key: TELEGRAM_BOT_TOKEN
         sync: false
@@ -11,8 +11,6 @@ services:
         sync: false
       - key: OWNER_ID
         sync: false
-      - key: USE_WEBHOOK
-        value: "true"
       - key: PYTHON_VERSION
         value: "3.11.9"
     autoDeploy: true

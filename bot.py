@@ -1061,22 +1061,9 @@ def init_bot():
         print("=" * 50)
         application.run_polling()
 
-# ========== Gunicorn入口：模块导入时初始化 ==========
-# 当Gunicorn导入此模块时，自动初始化Bot（仅在Webhook模式）
-if os.getenv("USE_WEBHOOK", "false").lower() == "true":
-    init_bot()
-    # 注意：不启动Flask，让Gunicorn管理app对象
-
-# ========== 直接运行支持（仅用于本地开发/测试）==========
+# ========== Render.com部署入口 ==========
 if __name__ == "__main__":
-    # 直接运行python bot.py时（非Gunicorn）
-    if os.getenv("USE_WEBHOOK", "false").lower() != "true":
-        # Polling模式（本地开发）
-        init_bot()
-    else:
-        # Webhook模式但直接运行（仅用于测试，生产环境用Gunicorn）
-        print("⚠️ 警告：检测到Webhook模式但直接运行python bot.py")
-        print("💡 生产环境请使用: gunicorn --bind 0.0.0.0:$PORT bot:app")
-        print("🔧 如需测试，将继续使用Flask开发服务器...\n")
-        port = int(os.getenv("PORT", "10000"))
-        app.run(host="0.0.0.0", port=port, use_reloader=False, threaded=True)
+    # Render.com使用Start Command运行此脚本
+    # 使用Polling模式（稳定可靠）+ HTTP保活服务器
+    print("🚀 Render.com部署模式：Polling + HTTP保活")
+    init_bot()
