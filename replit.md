@@ -84,6 +84,10 @@ Or update the workflow configuration to run your preferred script.
     - Can now use "@username 设置机器人管理员" (faster method)
     - Still supports traditional reply-to-message method
     - Both methods work for adding and removing admins
+  - **Stricter undo control**: Transaction undo now requires exact keyword
+    - Must type "撤销" exactly (no other text works)
+    - Prevents accidental undos from random replies to transaction messages
+    - Still works by replying to transaction message + typing "撤销"
 
 ## User Preferences
 - Manual control over code execution and library installation
