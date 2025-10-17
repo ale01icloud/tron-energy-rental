@@ -75,6 +75,11 @@ Or update the workflow configuration to run your preferred script.
     - Modified handle_text to read both message.text and message.caption
     - Updated MessageHandler to listen to (filters.TEXT | filters.CAPTION)
     - Users can now send "-10018" with a photo and bot will process it correctly
+  - **Added quick reset feature**: New "重置默认值" command
+    - One-click reset to recommended default rates and exchange rates
+    - Default: 入金费率10%/汇率153, 出金费率2%/汇率137
+    - Solves the issue where new groups may have zero rates due to old data files
+    - Also accepts "恢复默认值" as alternative command
 
 ## User Preferences
 - Manual control over code execution and library installation
