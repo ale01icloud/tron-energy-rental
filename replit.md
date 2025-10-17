@@ -70,6 +70,11 @@ Or update the workflow configuration to run your preferred script.
     - Service URL: https://telegram-finance-bot-c3wn.onrender.com
   - Created RENDER_POLLING_DEPLOY.md deployment guide
   - Bot now running 24/7 on Render.com with UptimeRobot keep-alive
+- 2025-10-17:
+  - **Fixed photo caption support**: Bot can now recognize numbers in photo captions
+    - Modified handle_text to read both message.text and message.caption
+    - Updated MessageHandler to listen to (filters.TEXT | filters.CAPTION)
+    - Users can now send "-10018" with a photo and bot will process it correctly
 
 ## User Preferences
 - Manual control over code execution and library installation

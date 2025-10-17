@@ -471,7 +471,8 @@ async def handle_text(update: Update, context: ContextTypes.DEFAULT_TYPE):
     user = update.effective_user
     chat = update.effective_chat
     chat_id = chat.id
-    text = (update.message.text or "").strip()
+    # 支持纯文本和图片说明文字
+    text = (update.message.text or update.message.caption or "").strip()
     ts, dstr = now_ts(), today_str()
     
     # ========== 私聊消息转发功能 ==========
@@ -971,7 +972,8 @@ def init_bot():
         # 创建bot application
         BotContainer.application = ApplicationBuilder().token(BOT_TOKEN).build()
         BotContainer.application.add_handler(CommandHandler("start", cmd_start))
-        BotContainer.application.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, handle_text))
+        # 支持纯文本和图片说明文字
+        BotContainer.application.add_handler(MessageHandler((filters.TEXT | filters.CAPTION) & ~filters.COMMAND, handle_text))
         print("✅ Bot 处理器已注册")
         
         # 使用独立事件循环线程（兼容Gunicorn）
@@ -1048,7 +1050,8 @@ def init_bot():
         
         application = ApplicationBuilder().token(BOT_TOKEN).build()
         application.add_handler(CommandHandler("start", cmd_start))
-        application.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, handle_text))
+        # 支持纯文本和图片说明文字
+        application.add_handler(MessageHandler((filters.TEXT | filters.CAPTION) & ~filters.COMMAND, handle_text))
         print("✅ Bot 处理器已注册")
         
         print("\n🌐 启动 HTTP 保活服务器...")
