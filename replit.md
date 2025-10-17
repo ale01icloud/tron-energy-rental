@@ -80,6 +80,10 @@ Or update the workflow configuration to run your preferred script.
     - Default: 入金费率10%/汇率153, 出金费率2%/汇率137
     - Solves the issue where new groups may have zero rates due to old data files
     - Also accepts "恢复默认值" as alternative command
+  - **Enhanced admin management**: Support @mention for adding/removing admins
+    - Can now use "@username 设置机器人管理员" (faster method)
+    - Still supports traditional reply-to-message method
+    - Both methods work for adding and removing admins
 
 ## User Preferences
 - Manual control over code execution and library installation

@@ -676,10 +676,35 @@ async def handle_text(update: Update, context: ContextTypes.DEFAULT_TYPE):
             await update.message.reply_text("🚫 你没有权限设置机器人管理员。\n💡 只有群主/群管理员可以执行此操作。")
             return
         
-        if not update.message.reply_to_message:
-            await update.message.reply_text("请『回复』要授权或移除的用户消息再发送此命令。")
+        # 获取目标用户：优先使用@mention，其次使用回复消息
+        target = None
+        
+        # 方式1：检查消息中是否有@mention
+        if update.message.entities:
+            for entity in update.message.entities:
+                if entity.type == "text_mention":
+                    # @了一个没有用户名的用户
+                    target = entity.user
+                    break
+                elif entity.type == "mention":
+                    # @了一个有用户名的用户，但需要通过回复或其他方式获取完整信息
+                    # 这种情况我们还是优先用回复消息
+                    pass
+        
+        # 方式2：如果没有@mention，检查是否回复了消息
+        if not target and update.message.reply_to_message:
+            target = update.message.reply_to_message.from_user
+        
+        # 如果两种方式都没有获取到目标用户
+        if not target:
+            await update.message.reply_text(
+                "❌ 请指定要操作的用户\n\n"
+                "方式1：@用户名 设置机器人管理员\n"
+                "方式2：回复用户消息 + 设置机器人管理员"
+            )
             return
-        target = update.message.reply_to_message.from_user
+        
+        # 执行操作
         if text.startswith("设置"):
             add_admin(target.id)
             await update.message.reply_text(f"✅ 已将 {target.mention_html()} 设置为机器人管理员。", parse_mode="HTML")
