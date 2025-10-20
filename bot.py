@@ -410,8 +410,11 @@ def render_group_summary(chat_id: int) -> str:
             if 'raw' in r:
                 raw = r.get('raw', 0)
                 fx = r.get('fx', fout)
+                rate = r.get('rate', rout)
                 usdt = trunc2(r['usdt'])
-                lines.append(f"{r['ts']} {raw} / {fx} = {usdt}")
+                rate_percent = int(rate * 100)
+                rate_sup = to_superscript(rate_percent)
+                lines.append(f"{r['ts']} {raw}  {rate_sup}/ {fx} = {usdt}")
     else:
         lines.append("（暂无）")
     
@@ -477,8 +480,11 @@ def render_full_summary(chat_id: int) -> str:
             if 'raw' in r:
                 raw = r.get('raw', 0)
                 fx = r.get('fx', fout)
+                rate = r.get('rate', rout)
                 usdt = trunc2(r['usdt'])
-                lines.append(f"{r['ts']} {raw} / {fx} = {usdt}")
+                rate_percent = int(rate * 100)
+                rate_sup = to_superscript(rate_percent)
+                lines.append(f"{r['ts']} {raw}  {rate_sup}/ {fx} = {usdt}")
     else:
         lines.append("（暂无）")
     
