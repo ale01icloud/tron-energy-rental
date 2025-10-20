@@ -143,7 +143,27 @@ def load_group_state(chat_id: int) -> dict:
         
         if row:
             state = dict(row['state_data'])
+            
+            # 🔧 自动修复：检测费率/汇率为0的情况
+            needs_fix = False
+            if state.get("defaults", {}).get("in", {}).get("rate") == 0 or \
+               state.get("defaults", {}).get("in", {}).get("fx") == 0 or \
+               state.get("defaults", {}).get("out", {}).get("rate") == 0 or \
+               state.get("defaults", {}).get("out", {}).get("fx") == 0:
+                print(f"⚠️ 群组 {chat_id} 检测到费率/汇率为0，自动修复中...")
+                state["defaults"] = {
+                    "in":  {"rate": 0.10, "fx": 153},
+                    "out": {"rate": -0.02, "fx": 137},
+                }
+                needs_fix = True
+            
             groups_state[chat_id] = state
+            
+            # 如果修复了数据，立即保存到数据库
+            if needs_fix:
+                save_group_state(chat_id)
+                print(f"✅ 群组 {chat_id} 费率/汇率已自动修复为默认值")
+            
             return state
     except Exception as e:
         print(f"⚠️ 从数据库加载群组状态失败: {e}")
