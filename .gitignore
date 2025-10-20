@@ -46,3 +46,6 @@ Thumbs.db
 
 # Replit attached assets (screenshots, debug files)
 attached_assets/
+
+# Bot runtime data (stored in database, not Git)
+data/
