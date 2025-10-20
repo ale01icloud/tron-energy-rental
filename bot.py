@@ -1084,18 +1084,9 @@ def init_bot():
         print("❌ 错误：未找到 TELEGRAM_BOT_TOKEN 环境变量")
         exit(1)
     
-    if not DATABASE_URL:
-        print("❌ 错误：未找到 DATABASE_URL 环境变量")
-        print("💡 提示：请在Render Dashboard → Environment中设置数据库URL")
-        exit(1)
-    
     print("✅ Bot Token 已加载")
-    print(f"💾 数据库连接: {DATABASE_URL[:30]}...")
     print(f"📊 数据目录: {DATA_DIR}")
     print(f"👑 超级管理员: {OWNER_ID or '未设置'}")
-    
-    # 初始化数据库表结构
-    print("\n💾 初始化数据库...")
     
     # 检查运行模式
     USE_WEBHOOK = os.getenv("USE_WEBHOOK", "false").lower() == "true"
