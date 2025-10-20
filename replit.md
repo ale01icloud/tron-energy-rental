@@ -114,6 +114,13 @@ Or update the workflow configuration to run your preferred script.
     - Bot prompts admins to set rates before first transaction
     - Prevents accidental use of preset values
     - Use "重置默认值" for quick setup with recommended values
+  - **Code cleanup and security improvements**:
+    - Removed Flask and gunicorn dependencies (reduced from 6 to 3 packages)
+    - Removed all Webhook mode code (simplified from 1208 to 1071 lines)
+    - Added lightweight HTTP health check server using Python's built-in http.server
+    - Eliminated token exposure in logs (no more printing sensitive URLs)
+    - Deployment now requires only 2 environment variables: TELEGRAM_BOT_TOKEN, OWNER_ID
+    - Pure Polling mode - simpler, more reliable, easier to maintain
 
 ## User Preferences
 - Manual control over code execution and library installation
