@@ -74,11 +74,11 @@ LOG_DIR.mkdir(parents=True, exist_ok=True)
 groups_state = {}
 
 def get_default_state():
-    """返回默认群组状态"""
+    """返回默认群组状态（初始费率/汇率为0，需要管理员设置）"""
     return {
         "defaults": {
-            "in":  {"rate": 0.10, "fx": 153},
-            "out": {"rate": -0.02, "fx": 137},
+            "in":  {"rate": 0, "fx": 0},
+            "out": {"rate": 0, "fx": 0},
         },
         "countries": {},
         "precision": {"mode": "truncate", "digits": 2},
@@ -105,27 +105,8 @@ def load_group_state(chat_id: int) -> dict:
         try:
             with file_path.open("r", encoding="utf-8") as f:
                 state = json.load(f)
-                
-            # 🔧 自动修复：检测费率/汇率为0的情况
-            needs_fix = False
-            if state.get("defaults", {}).get("in", {}).get("rate") == 0 or \
-               state.get("defaults", {}).get("in", {}).get("fx") == 0 or \
-               state.get("defaults", {}).get("out", {}).get("rate") == 0 or \
-               state.get("defaults", {}).get("out", {}).get("fx") == 0:
-                print(f"⚠️ 群组 {chat_id} 检测到费率/汇率为0，自动修复中...")
-                state["defaults"] = {
-                    "in":  {"rate": 0.10, "fx": 153},
-                    "out": {"rate": -0.02, "fx": 137},
-                }
-                needs_fix = True
             
             groups_state[chat_id] = state
-            
-            # 如果修复了数据，立即保存
-            if needs_fix:
-                save_group_state(chat_id)
-                print(f"✅ 群组 {chat_id} 费率/汇率已自动修复为默认值")
-            
             return state
         except Exception as e:
             print(f"⚠️ 加载群组状态文件失败: {e}")
@@ -1007,6 +988,20 @@ async def handle_text(update: Update, context: ContextTypes.DEFAULT_TYPE):
             return  # 非管理员不回复
         amt, country = parse_amount_and_country(text)
         p = resolve_params(chat_id, "in", country)
+        
+        # 检查费率和汇率是否已设置
+        if p["rate"] == 0 or p["fx"] == 0:
+            await update.message.reply_text(
+                "⚠️ 请先设置费率和汇率\n\n"
+                "💡 快速设置命令：\n"
+                "• 重置默认值（推荐）\n"
+                "• 设置入金费率 10\n"
+                "• 设置入金汇率 153\n"
+                "• 设置出金费率 -2\n"
+                "• 设置出金汇率 137"
+            )
+            return
+        
         usdt = trunc2(amt * (1 - p["rate"]) / p["fx"])
         push_recent(chat_id, "in", {"ts": ts, "raw": amt, "usdt": usdt, "country": country, "fx": p["fx"], "rate": p["rate"]})
         state["summary"]["should_send_usdt"] = trunc2(state["summary"]["should_send_usdt"] + usdt)
@@ -1022,6 +1017,20 @@ async def handle_text(update: Update, context: ContextTypes.DEFAULT_TYPE):
             return  # 非管理员不回复
         amt, country = parse_amount_and_country(text)
         p = resolve_params(chat_id, "out", country)
+        
+        # 检查费率和汇率是否已设置
+        if p["rate"] == 0 or p["fx"] == 0:
+            await update.message.reply_text(
+                "⚠️ 请先设置费率和汇率\n\n"
+                "💡 快速设置命令：\n"
+                "• 重置默认值（推荐）\n"
+                "• 设置入金费率 10\n"
+                "• 设置入金汇率 153\n"
+                "• 设置出金费率 -2\n"
+                "• 设置出金汇率 137"
+            )
+            return
+        
         usdt = trunc2(amt * (1 + p["rate"]) / p["fx"])
         push_recent(chat_id, "out", {"ts": ts, "raw": amt, "usdt": usdt, "country": country, "fx": p["fx"], "rate": p["rate"]})
         state["summary"]["sent_usdt"] = trunc2(state["summary"]["sent_usdt"] + usdt)
