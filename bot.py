@@ -4,11 +4,14 @@ from pathlib import Path
 from flask import Flask, request
 from dotenv import load_dotenv
 import requests
+import psycopg2
+from psycopg2.extras import Json, RealDictCursor
 
 # ========== 加载环境 ==========
 load_dotenv()
 BOT_TOKEN = os.getenv("TELEGRAM_BOT_TOKEN")
 OWNER_ID  = os.getenv("OWNER_ID")  # 可选：你的 Telegram ID（字符串），拥有永久管理员权限
+DATABASE_URL = os.getenv("DATABASE_URL")  # PostgreSQL连接URL
 
 # ========== Flask应用（用于健康检查和Webhook）==========
 app = Flask(__name__)
@@ -60,15 +63,50 @@ def webhook(token):
         traceback.print_exc()
         return "error", 500
 
+# ========== 数据库连接 ==========
+def get_db_connection():
+    """获取数据库连接"""
+    return psycopg2.connect(DATABASE_URL)
+
+def init_database():
+    """初始化数据库表结构"""
+    conn = get_db_connection()
+    cur = conn.cursor()
+    
+    # 创建群组状态表
+    cur.execute("""
+        CREATE TABLE IF NOT EXISTS groups (
+            chat_id BIGINT PRIMARY KEY,
+            state_data JSONB NOT NULL,
+            updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        )
+    """)
+    
+    # 创建管理员表
+    cur.execute("""
+        CREATE TABLE IF NOT EXISTS admins (
+            user_id BIGINT PRIMARY KEY,
+            added_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        )
+    """)
+    
+    # 如果有OWNER_ID，自动添加为管理员
+    if OWNER_ID and OWNER_ID.isdigit():
+        cur.execute("""
+            INSERT INTO admins (user_id) VALUES (%s)
+            ON CONFLICT (user_id) DO NOTHING
+        """, (int(OWNER_ID),))
+    
+    conn.commit()
+    cur.close()
+    conn.close()
+    print("✅ 数据库初始化完成")
+
 # ========== 记账核心状态（多群组支持）==========
 DATA_DIR = Path("./data")
-GROUPS_DIR = DATA_DIR / "groups"
 LOG_DIR  = DATA_DIR / "logs"
 DATA_DIR.mkdir(parents=True, exist_ok=True)
-GROUPS_DIR.mkdir(parents=True, exist_ok=True)
 LOG_DIR.mkdir(parents=True, exist_ok=True)
-
-ADMIN_FILE = DATA_DIR / "admins.json"
 
 # 群组状态缓存 {chat_id: state_dict}
 groups_state = {}
@@ -88,23 +126,27 @@ def get_default_state():
         "last_date": ""
     }
 
-def get_group_file(chat_id: int) -> Path:
-    """获取群组数据文件路径"""
-    return GROUPS_DIR / f"group_{chat_id}.json"
-
 def load_group_state(chat_id: int) -> dict:
-    """加载群组状态"""
+    """从数据库加载群组状态"""
+    # 先检查缓存
     if chat_id in groups_state:
         return groups_state[chat_id]
     
-    file = get_group_file(chat_id)
-    if file.exists():
-        try:
-            state = json.loads(file.read_text(encoding="utf-8"))
+    # 从数据库读取
+    try:
+        conn = get_db_connection()
+        cur = conn.cursor(cursor_factory=RealDictCursor)
+        cur.execute("SELECT state_data FROM groups WHERE chat_id = %s", (chat_id,))
+        row = cur.fetchone()
+        cur.close()
+        conn.close()
+        
+        if row:
+            state = dict(row['state_data'])
             groups_state[chat_id] = state
             return state
-        except Exception:
-            pass
+    except Exception as e:
+        print(f"⚠️ 从数据库加载群组状态失败: {e}")
     
     # 创建新群组状态
     state = get_default_state()
@@ -113,27 +155,51 @@ def load_group_state(chat_id: int) -> dict:
     return state
 
 def save_group_state(chat_id: int):
-    """保存群组状态"""
+    """保存群组状态到数据库"""
     if chat_id not in groups_state:
         return
-    file = get_group_file(chat_id)
-    file.write_text(json.dumps(groups_state[chat_id], ensure_ascii=False, indent=2), encoding="utf-8")
+    
+    try:
+        conn = get_db_connection()
+        cur = conn.cursor()
+        cur.execute("""
+            INSERT INTO groups (chat_id, state_data, updated_at)
+            VALUES (%s, %s, CURRENT_TIMESTAMP)
+            ON CONFLICT (chat_id)
+            DO UPDATE SET state_data = %s, updated_at = CURRENT_TIMESTAMP
+        """, (chat_id, Json(groups_state[chat_id]), Json(groups_state[chat_id])))
+        conn.commit()
+        cur.close()
+        conn.close()
+    except Exception as e:
+        print(f"❌ 保存群组状态到数据库失败: {e}")
+
+# 管理员缓存（从数据库加载）
+admins_cache = None
 
 def load_admins():
-    if not ADMIN_FILE.exists():
-        default = []
-        if OWNER_ID and OWNER_ID.isdigit():
-            default = [int(OWNER_ID)]
-        ADMIN_FILE.write_text(json.dumps(default, ensure_ascii=False, indent=2))
+    """从数据库加载管理员列表"""
+    global admins_cache
+    if admins_cache is not None:
+        return admins_cache
+    
     try:
-        return json.loads(ADMIN_FILE.read_text(encoding="utf-8"))
-    except Exception:
+        conn = get_db_connection()
+        cur = conn.cursor()
+        cur.execute("SELECT user_id FROM admins ORDER BY user_id")
+        rows = cur.fetchall()
+        cur.close()
+        conn.close()
+        admins_cache = [row[0] for row in rows]
+        return admins_cache
+    except Exception as e:
+        print(f"⚠️ 从数据库加载管理员失败: {e}")
         return []
 
 def save_admins(admin_list):
-    ADMIN_FILE.write_text(json.dumps(admin_list, ensure_ascii=False, indent=2), encoding="utf-8")
-
-admins_cache = load_admins()
+    """保存管理员列表到数据库（不再使用，保留以兼容）"""
+    # 此函数已废弃，改用add_admin和remove_admin
+    pass
 
 # ========== 工具函数 ==========
 def trunc2(x: float) -> float:
@@ -227,26 +293,53 @@ def parse_amount_and_country(text: str):
 def is_admin(user_id: int) -> bool:
     if OWNER_ID and OWNER_ID.isdigit() and int(OWNER_ID) == user_id:
         return True
-    return user_id in admins_cache
+    admin_list = load_admins()
+    return user_id in admin_list
 
 def add_admin(user_id: int) -> bool:
+    """添加管理员到数据库"""
     global admins_cache
-    if user_id not in admins_cache:
-        admins_cache.append(user_id)
-        save_admins(admins_cache)
-        return True
-    return False
+    try:
+        conn = get_db_connection()
+        cur = conn.cursor()
+        cur.execute("""
+            INSERT INTO admins (user_id) VALUES (%s)
+            ON CONFLICT (user_id) DO NOTHING
+        """, (user_id,))
+        affected = cur.rowcount
+        conn.commit()
+        cur.close()
+        conn.close()
+        
+        # 更新缓存
+        admins_cache = None  # 清空缓存，下次重新加载
+        return affected > 0
+    except Exception as e:
+        print(f"❌ 添加管理员失败: {e}")
+        return False
 
 def remove_admin(user_id: int) -> bool:
+    """从数据库移除管理员"""
     global admins_cache
-    if user_id in admins_cache:
-        admins_cache.remove(user_id)
-        save_admins(admins_cache)
-        return True
-    return False
+    try:
+        conn = get_db_connection()
+        cur = conn.cursor()
+        cur.execute("DELETE FROM admins WHERE user_id = %s", (user_id,))
+        affected = cur.rowcount
+        conn.commit()
+        cur.close()
+        conn.close()
+        
+        # 更新缓存
+        admins_cache = None  # 清空缓存，下次重新加载
+        return affected > 0
+    except Exception as e:
+        print(f"❌ 移除管理员失败: {e}")
+        return False
 
 def list_admins():
-    return admins_cache[:]
+    """获取管理员列表"""
+    return load_admins()
 
 # ========== 群内汇总显示 ==========
 def render_group_summary(chat_id: int) -> str:
@@ -983,9 +1076,19 @@ def init_bot():
         print("❌ 错误：未找到 TELEGRAM_BOT_TOKEN 环境变量")
         exit(1)
     
+    if not DATABASE_URL:
+        print("❌ 错误：未找到 DATABASE_URL 环境变量")
+        print("💡 提示：请在Render Dashboard → Environment中设置数据库URL")
+        exit(1)
+    
     print("✅ Bot Token 已加载")
+    print(f"💾 数据库连接: {DATABASE_URL[:30]}...")
     print(f"📊 数据目录: {DATA_DIR}")
     print(f"👑 超级管理员: {OWNER_ID or '未设置'}")
+    
+    # 初始化数据库表结构
+    print("\n💾 初始化数据库...")
+    init_database()
     
     # 检查运行模式
     USE_WEBHOOK = os.getenv("USE_WEBHOOK", "false").lower() == "true"
