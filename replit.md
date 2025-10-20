@@ -104,6 +104,13 @@ Or update the workflow configuration to run your preferred script.
     - Logs still in local files (ephemeral)
   - Updated deployment documentation with database setup instructions
   - Added data/ to .gitignore (no longer commit runtime data)
+  - **UI improvement: New transaction record format**
+    - Changed display from emoji circles (①②③) to clean list format
+    - 入金记录: 时间 金额￥/ 汇率 = USDT
+    - 出金记录: 时间 金额 / 汇率 = USDT  
+    - 下发记录单独分类显示
+    - Records now save exchange rate (fx) for accurate display
+    - Applied to both summary and full record views
 
 ## User Preferences
 - Manual control over code execution and library installation
