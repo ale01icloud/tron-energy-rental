@@ -270,8 +270,6 @@ def render_group_summary(chat_id: int) -> str:
             rate_percent = int(rate * 100)  # 转换为百分比整数
             rate_sup = to_superscript(rate_percent)  # 转换为上标
             lines.append(f"{r['ts']} {raw}  {rate_sup}/ {fx} = {usdt}")
-    else:
-        lines.append("（暂无）")
     
     lines.append("")
     
@@ -287,8 +285,6 @@ def render_group_summary(chat_id: int) -> str:
                 rate_percent = int(rate * 100)
                 rate_sup = to_superscript(rate_percent)
                 lines.append(f"{r['ts']} {raw}  {rate_sup}/ {fx} = {usdt}")
-    else:
-        lines.append("（暂无）")
     
     lines.append("")
     
@@ -338,8 +334,6 @@ def render_full_summary(chat_id: int) -> str:
             rate_percent = int(rate * 100)
             rate_sup = to_superscript(rate_percent)
             lines.append(f"{r['ts']} {raw}  {rate_sup}/ {fx} = {usdt}")
-    else:
-        lines.append("（暂无）")
     
     lines.append("")
     
@@ -355,8 +349,6 @@ def render_full_summary(chat_id: int) -> str:
                 rate_percent = int(rate * 100)
                 rate_sup = to_superscript(rate_percent)
                 lines.append(f"{r['ts']} {raw}  {rate_sup}/ {fx} = {usdt}")
-    else:
-        lines.append("（暂无）")
     
     lines.append("")
     
