@@ -230,6 +230,15 @@ def trunc2(x: float) -> float:
 def fmt_usdt(x: float) -> str:
     return f"{x:.2f} USDT"
 
+def to_superscript(num: int) -> str:
+    """将数字转换为上标，用于显示费率"""
+    superscript_map = {
+        '0': '⁰', '1': '¹', '2': '²', '3': '³', '4': '⁴',
+        '5': '⁵', '6': '⁶', '7': '⁷', '8': '⁸', '9': '⁹',
+        '-': '⁻'
+    }
+    return ''.join(superscript_map.get(c, c) for c in str(num))
+
 def now_ts():
     # 使用北京时间（UTC+8）
     beijing_tz = datetime.timezone(datetime.timedelta(hours=8))
@@ -384,8 +393,11 @@ def render_group_summary(chat_id: int) -> str:
         for r in rec_in[:5]:
             raw = r.get('raw', 0)
             fx = r.get('fx', fin)  # 如果没有保存汇率，使用默认汇率
+            rate = r.get('rate', rin)  # 获取费率
             usdt = trunc2(r['usdt'])
-            lines.append(f"{r['ts']} {raw} ￥/ {fx} = {usdt}")
+            rate_percent = int(rate * 100)  # 转换为百分比整数
+            rate_sup = to_superscript(rate_percent)  # 转换为上标
+            lines.append(f"{r['ts']} {raw}  {rate_sup}/ {fx} = {usdt}")
     else:
         lines.append("（暂无）")
     
@@ -448,8 +460,11 @@ def render_full_summary(chat_id: int) -> str:
         for r in rec_in:
             raw = r.get('raw', 0)
             fx = r.get('fx', fin)
+            rate = r.get('rate', rin)
             usdt = trunc2(r['usdt'])
-            lines.append(f"{r['ts']} {raw} ￥/ {fx} = {usdt}")
+            rate_percent = int(rate * 100)
+            rate_sup = to_superscript(rate_percent)
+            lines.append(f"{r['ts']} {raw}  {rate_sup}/ {fx} = {usdt}")
     else:
         lines.append("（暂无）")
     
@@ -1050,7 +1065,7 @@ async def handle_text(update: Update, context: ContextTypes.DEFAULT_TYPE):
         amt, country = parse_amount_and_country(text)
         p = resolve_params(chat_id, "in", country)
         usdt = trunc2(amt * (1 - p["rate"]) / p["fx"])
-        push_recent(chat_id, "in", {"ts": ts, "raw": amt, "usdt": usdt, "country": country, "fx": p["fx"]})
+        push_recent(chat_id, "in", {"ts": ts, "raw": amt, "usdt": usdt, "country": country, "fx": p["fx"], "rate": p["rate"]})
         state["summary"]["should_send_usdt"] = trunc2(state["summary"]["should_send_usdt"] + usdt)
         save_group_state(chat_id)
         append_log(log_path(chat_id, country, dstr),
@@ -1065,7 +1080,7 @@ async def handle_text(update: Update, context: ContextTypes.DEFAULT_TYPE):
         amt, country = parse_amount_and_country(text)
         p = resolve_params(chat_id, "out", country)
         usdt = trunc2(amt * (1 + p["rate"]) / p["fx"])
-        push_recent(chat_id, "out", {"ts": ts, "raw": amt, "usdt": usdt, "country": country, "fx": p["fx"]})
+        push_recent(chat_id, "out", {"ts": ts, "raw": amt, "usdt": usdt, "country": country, "fx": p["fx"], "rate": p["rate"]})
         state["summary"]["sent_usdt"] = trunc2(state["summary"]["sent_usdt"] + usdt)
         save_group_state(chat_id)
         append_log(log_path(chat_id, country, dstr),
