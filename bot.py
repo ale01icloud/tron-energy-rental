@@ -420,16 +420,14 @@ def render_group_summary(chat_id: int) -> str:
     
     lines.append("")
     
-    # 下发记录
-    lines.append(f"已下发 ({len(send_out)}笔)")
+    # 下发记录（只有当有下发记录时才显示）
     if send_out:
+        lines.append(f"已下发 ({len(send_out)}笔)")
         for r in send_out[:5]:
             usdt = trunc2(abs(r['usdt']))  # 使用绝对值，避免负数
             lines.append(f"{r['ts']} {usdt}")
-    else:
-        lines.append("（暂无）")
+        lines.append("")
     
-    lines.append("")
     lines.append("━━━━━━━━━━━━━━")
     lines.append(f"⚙️ 当前费率：入 {rin*100:.0f}% ⇄ 出 {rout*100:.0f}%")
     lines.append(f"💱 固定汇率：入 {fin} ⇄ 出 {fout}")
@@ -490,16 +488,14 @@ def render_full_summary(chat_id: int) -> str:
     
     lines.append("")
     
-    # 下发记录
-    lines.append(f"已下发 ({len(send_out)}笔)")
+    # 下发记录（只有当有下发记录时才显示）
     if send_out:
+        lines.append(f"已下发 ({len(send_out)}笔)")
         for r in send_out:
             usdt = trunc2(abs(r['usdt']))
             lines.append(f"{r['ts']} {usdt}")
-    else:
-        lines.append("（暂无）")
+        lines.append("")
     
-    lines.append("")
     lines.append("━━━━━━━━━━━━━━")
     lines.append(f"⚙️ 当前费率：入 {rin*100:.0f}% ⇄ 出 {rout*100:.0f}%")
     lines.append(f"💱 固定汇率：入 {fin} ⇄ 出 {fout}")
