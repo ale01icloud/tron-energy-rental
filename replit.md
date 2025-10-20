@@ -109,6 +109,11 @@ Or update the workflow configuration to run your preferred script.
   - ⚠️ **Important**: Render free tier resets files on redeploy
     - Use "重置默认值" command to quickly restore settings after redeploy
     - Avoid frequent redeployments to minimize data loss
+  - **Initial setup change**: Default rates set to 0
+    - New groups start with all rates/exchange rates at 0
+    - Bot prompts admins to set rates before first transaction
+    - Prevents accidental use of preset values
+    - Use "重置默认值" for quick setup with recommended values
 
 ## User Preferences
 - Manual control over code execution and library installation
