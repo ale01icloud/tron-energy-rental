@@ -721,6 +721,18 @@ async def handle_text(update: Update, context: ContextTypes.DEFAULT_TYPE):
         
         # 执行操作
         if text.startswith("设置"):
+            # 检查目标用户是否是群组管理员
+            is_target_admin = await is_group_admin(update, context, target.id)
+            
+            if not is_target_admin:
+                await update.message.reply_text(
+                    f"🚫 无法设置 {target.mention_html()} 为机器人管理员。\n\n"
+                    f"⚠️ 只有Telegram群组管理员才能成为机器人管理员。\n\n"
+                    f"💡 请先在群组设置中将该用户提升为管理员，然后再执行此操作。",
+                    parse_mode="HTML"
+                )
+                return
+            
             add_admin(target.id)
             await update.message.reply_text(f"✅ 已将 {target.mention_html()} 设置为机器人管理员。", parse_mode="HTML")
         elif text.startswith("删除"):
