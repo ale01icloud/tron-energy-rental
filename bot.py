@@ -1,7 +1,6 @@
 # bot.py
 import os, re, threading, json, math, datetime
 from pathlib import Path
-from flask import Flask, request
 from dotenv import load_dotenv
 import requests
 
@@ -9,56 +8,6 @@ import requests
 load_dotenv()
 BOT_TOKEN = os.getenv("TELEGRAM_BOT_TOKEN")
 OWNER_ID  = os.getenv("OWNER_ID")  # 可选：你的 Telegram ID（字符串），拥有永久管理员权限
-
-# ========== Flask应用（用于健康检查和Webhook）==========
-app = Flask(__name__)
-
-# 全局bot application对象（在webhook模式下会被设置）
-class BotContainer:
-    application = None
-    loop = None
-    init_started = False
-    init_lock = threading.Lock()
-
-@app.get("/")
-def health_check():
-    return "AA全球国际支付机器人正在运行", 200
-
-@app.get("/health")
-def health():
-    return "ok", 200
-
-@app.post("/<token>")
-def webhook(token):
-    """处理Telegram webhook请求"""
-    if token != BOT_TOKEN:
-        print(f"❌ Token不匹配: {token[:20]}...")
-        return "Unauthorized", 401
-    
-    if not BotContainer.loop:
-        print(f"⏳ Bot尚未初始化完成")
-        return "Service Unavailable", 503
-    
-    try:
-        from telegram import Update
-        import asyncio
-        
-        # 获取更新数据
-        update_data = request.get_json(force=True)
-        update = Update.de_json(update_data, BotContainer.application.bot)
-        
-        # 将更新提交到bot的事件循环
-        asyncio.run_coroutine_threadsafe(
-            BotContainer.application.process_update(update),
-            BotContainer.loop
-        )
-        
-        return "ok", 200
-    except Exception as e:
-        print(f"❌ Webhook处理错误: {e}")
-        import traceback
-        traceback.print_exc()
-        return "error", 500
 
 # ========== 记账核心状态（多群组支持）==========
 DATA_DIR = Path("./data")
@@ -1057,9 +1006,9 @@ async def handle_text(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
     # 无效操作不回复
 
-# ========== 初始化函数（支持Gunicorn） ==========
+# ========== 初始化函数 ==========
 def init_bot():
-    """初始化Bot - 在Gunicorn启动时或直接运行时调用"""
+    """初始化Bot - Polling模式"""
     print("=" * 50)
     print("🚀 正在启动财务记账机器人...")
     print("=" * 50)
@@ -1072,136 +1021,19 @@ def init_bot():
     print(f"📊 数据目录: {DATA_DIR}")
     print(f"👑 超级管理员: {OWNER_ID or '未设置'}")
     
-    # 检查运行模式
-    USE_WEBHOOK = os.getenv("USE_WEBHOOK", "false").lower() == "true"
-    
-    print("\n🤖 配置 Telegram Bot...")
+    print("\n🤖 配置 Telegram Bot (Polling模式)...")
     from telegram.ext import ApplicationBuilder
     
-    if USE_WEBHOOK:
-        # Webhook模式（Render Web Service）
-        # 优先使用手动配置的WEBHOOK_URL，否则使用Render自动提供的RENDER_EXTERNAL_URL
-        base_url = os.getenv("WEBHOOK_URL") or os.getenv("RENDER_EXTERNAL_URL")
-        
-        if not base_url:
-            print("❌ 错误：Webhook模式需要设置以下环境变量之一：")
-            print("   1. WEBHOOK_URL - 手动设置webhook地址（推荐）")
-            print("   2. RENDER_EXTERNAL_URL - Render自动提供")
-            print("\n请在Render Dashboard → Environment中添加：")
-            print("   WEBHOOK_URL = https://你的服务名.onrender.com")
-            exit(1)
-        
-        webhook_url = f"{base_url}/{BOT_TOKEN}"
-        port = int(os.getenv("PORT", "10000"))  # Render默认端口
-        
-        # 验证webhook URL
-        if not webhook_url.startswith("https://"):
-            print(f"❌ 错误：Webhook URL必须使用HTTPS: {webhook_url}")
-            print(f"   BASE_URL: {base_url}")
-            exit(1)
-        
-        print(f"\n🌐 使用 Webhook 模式")
-        print(f"📡 Webhook URL: {webhook_url}")
-        print(f"🔌 监听端口: {port}")
-        
-        # 创建bot application
-        BotContainer.application = ApplicationBuilder().token(BOT_TOKEN).build()
-        BotContainer.application.add_handler(CommandHandler("start", cmd_start))
-        # 支持纯文本和图片说明文字
-        BotContainer.application.add_handler(MessageHandler((filters.TEXT | filters.CAPTION) & ~filters.COMMAND, handle_text))
-        print("✅ Bot 处理器已注册")
-        
-        # 使用独立事件循环线程（兼容Gunicorn）
-        def setup_webhook_thread():
-            import asyncio
-            import time
-            time.sleep(2)  # 等待Flask完全启动
-            
-            # 创建新的事件循环（Gunicorn兼容）
-            loop = asyncio.new_event_loop()
-            asyncio.set_event_loop(loop)
-            BotContainer.loop = loop
-            print("✅ Bot事件循环已创建")
-            
-            async def init():
-                try:
-                    await BotContainer.application.initialize()
-                    print("✅ Bot application已初始化")
-                    
-                    await BotContainer.application.bot.delete_webhook(drop_pending_updates=True)
-                    print("🗑️ 已清除旧webhook")
-                    
-                    success = await BotContainer.application.bot.set_webhook(
-                        url=webhook_url,
-                        drop_pending_updates=False,
-                        allowed_updates=["message"]
-                    )
-                    print(f"✅ Webhook设置{'成功' if success else '失败'}: {webhook_url}")
-                    
-                    await BotContainer.application.start()
-                    print("✅ Bot application已启动")
-                except Exception as e:
-                    print(f"❌ Webhook初始化错误: {e}")
-                    import traceback
-                    traceback.print_exc()
-            
-            # 运行初始化
-            loop.run_until_complete(init())
-            
-            # 保持事件循环运行（处理webhook请求）
-            loop.run_forever()
-        
-        threading.Thread(target=setup_webhook_thread, daemon=False).start()
-        print("🔄 事件循环线程已启动")
-        
-        # 自动保活机制 - 每5分钟ping一次自己防止Render休眠
-        def keep_alive():
-            import time
-            time.sleep(30)  # 等待启动
-            health_url = f"{base_url}/health"
-            print(f"🔄 保活目标: {health_url}")
-            
-            while True:
-                time.sleep(300)  # 每5分钟（Render免费套餐15分钟无流量会休眠）
-                try:
-                    response = requests.get(health_url, timeout=10)
-                    if response.status_code == 200:
-                        print(f"💓 保活成功: {datetime.datetime.now().strftime('%H:%M:%S')}")
-                    else:
-                        print(f"⚠️ 保活响应异常: {response.status_code}")
-                except Exception as e:
-                    print(f"❌ 保活失败: {e}")
-        
-        threading.Thread(target=keep_alive, daemon=True).start()
-        print("✅ 自动保活机制已启动（每5分钟ping一次）")
-        
-        print(f"\n✅ Webhook模式初始化完成")
-        print("=" * 50)
-        # 注意：不调用app.run()，让Gunicorn管理Flask应用
-        
-    else:
-        # Polling模式（本地开发/Replit）
-        print("\n🔄 使用 Polling 模式（本地开发）")
-        
-        application = ApplicationBuilder().token(BOT_TOKEN).build()
-        application.add_handler(CommandHandler("start", cmd_start))
-        # 支持纯文本和图片说明文字
-        application.add_handler(MessageHandler((filters.TEXT | filters.CAPTION) & ~filters.COMMAND, handle_text))
-        print("✅ Bot 处理器已注册")
-        
-        print("\n🌐 启动 HTTP 保活服务器...")
-        def run_http():
-            port = int(os.getenv("PORT", "5000"))
-            app.run(host="0.0.0.0", port=port, use_reloader=False)
-        threading.Thread(target=run_http, daemon=True).start()
-        print("✅ HTTP 服务器已启动（后台运行）")
-        print("\n🎉 机器人正在运行，等待消息...")
-        print("=" * 50)
-        application.run_polling()
+    application = ApplicationBuilder().token(BOT_TOKEN).build()
+    application.add_handler(CommandHandler("start", cmd_start))
+    # 支持纯文本和图片说明文字
+    application.add_handler(MessageHandler((filters.TEXT | filters.CAPTION) & ~filters.COMMAND, handle_text))
+    print("✅ Bot 处理器已注册")
+    
+    print("\n🎉 机器人正在运行，等待消息...")
+    print("=" * 50)
+    application.run_polling()
 
-# ========== Render.com部署入口 ==========
+# ========== 程序入口 ==========
 if __name__ == "__main__":
-    # Render.com使用Start Command运行此脚本
-    # 使用Polling模式（稳定可靠）+ HTTP保活服务器
-    print("🚀 Render.com部署模式：Polling + HTTP保活")
     init_bot()
