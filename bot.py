@@ -434,8 +434,8 @@ async def cmd_start(update: Update, context: ContextTypes.DEFAULT_TYPE):
                 "  • 进入群组聊天\n"
                 "  • 发送任意消息（比如：\"申请管理员权限\"）\n"
                 "  • 这样群管理员才能回复你的消息\n\n"
-                "第3步：让群主/群管理员授权\n"
-                "  • 群管理员点击「回复」你的消息\n"
+                "第3步：让机器人管理员授权\n"
+                "  • 机器人管理员点击「回复」你的消息\n"
                 "  • 在回复框中输入：设置机器人管理员\n"
                 "  • 发送后，你就获得了机器人管理员权限\n\n"
                 "第4步：开始使用机器人\n"
@@ -451,7 +451,7 @@ async def cmd_start(update: Update, context: ContextTypes.DEFAULT_TYPE):
                 "💡 重要提示：\n"
                 "  ⚠️ 只有机器人管理员的操作才会被响应\n"
                 "  ⚠️ 普通成员的操作机器人不会回复\n"
-                "  ⚠️ 只有群主/群管理员能设置机器人管理员\n\n"
+                "  ⚠️ 只有机器人管理员能授权其他成员（包括普通成员）\n\n"
                 "━━━━━━━━━━━━━━━━━━━━\n"
                 "👉 再次发送 /start 查看完整功能列表"
             )
@@ -684,11 +684,9 @@ async def handle_text(update: Update, context: ContextTypes.DEFAULT_TYPE):
             await update.message.reply_text("\n".join(lines))
             return
         
-        # 检查权限：只有群组管理员/群主可以设置
-        is_chat_admin = await is_group_admin(update, context, user.id)
-        
-        if not is_chat_admin:
-            await update.message.reply_text("🚫 你没有权限设置机器人管理员。\n💡 只有群主/群管理员可以执行此操作。")
+        # 检查权限：只有机器人管理员可以设置
+        if not is_admin(user.id):
+            await update.message.reply_text("🚫 你没有权限设置机器人管理员。\n💡 只有机器人管理员可以执行此操作。")
             return
         
         # 获取目标用户：优先使用@mention，其次使用回复消息
@@ -721,18 +719,6 @@ async def handle_text(update: Update, context: ContextTypes.DEFAULT_TYPE):
         
         # 执行操作
         if text.startswith("设置"):
-            # 检查目标用户是否是群组管理员
-            is_target_admin = await is_group_admin(update, context, target.id)
-            
-            if not is_target_admin:
-                await update.message.reply_text(
-                    f"🚫 无法设置 {target.mention_html()} 为机器人管理员。\n\n"
-                    f"⚠️ 只有Telegram群组管理员才能成为机器人管理员。\n\n"
-                    f"💡 请先在群组设置中将该用户提升为管理员，然后再执行此操作。",
-                    parse_mode="HTML"
-                )
-                return
-            
             add_admin(target.id)
             await update.message.reply_text(f"✅ 已将 {target.mention_html()} 设置为机器人管理员。", parse_mode="HTML")
         elif text.startswith("删除"):
