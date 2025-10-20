@@ -89,28 +89,26 @@ Or update the workflow configuration to run your preferred script.
     - Prevents accidental undos from random replies to transaction messages
     - Still works by replying to transaction message + typing "撤销"
 - 2025-10-20:
-  - **Major upgrade: PostgreSQL database integration** 🎉
-    - Migrated from JSON file storage to PostgreSQL database
-    - All group states, rates, and admin data now persist in database
-    - ✅ Redeployment no longer resets settings or data
-    - ✅ Rate/exchange rate settings survive server restarts
-    - ✅ Transaction history preserved across deployments
-    - Added psycopg2-binary dependency
-    - Created database schema with groups and admins tables
-    - Updated init_database() to auto-create tables on startup
-  - **Data persistence guarantee**:
-    - Group-specific rates and exchanges永久保存
-    - Admin list stored in database, not file
-    - Logs still in local files (ephemeral)
-  - Updated deployment documentation with database setup instructions
-  - Added data/ to .gitignore (no longer commit runtime data)
   - **UI improvement: New transaction record format**
     - Changed display from emoji circles (①②③) to clean list format
-    - 入金记录: 时间 金额￥/ 汇率 = USDT
-    - 出金记录: 时间 金额 / 汇率 = USDT  
+    - 入金记录: 时间 金额^费率/ 汇率 = USDT (fee rate shown as superscript)
+    - 出金记录: 时间 金额^费率 / 汇率 = USDT  
     - 下发记录单独分类显示
-    - Records now save exchange rate (fx) for accurate display
+    - Records now save exchange rate (fx) and fee rate for accurate display
     - Applied to both summary and full record views
+  - **Reverted to JSON file storage** (PostgreSQL removed)
+    - PostgreSQL required credit card verification on Render free tier
+    - Returned to simple JSON file storage in ./data/ directory
+    - Removed psycopg2-binary dependency
+    - All tests passing with file-based storage
+    - Auto-repair feature detects and fixes zero rates on file load
+  - **Data storage location**:
+    - Group data: data/groups/group_<chat_id>.json
+    - Admin list: data/admins.json
+    - Logs: data/logs/ (ephemeral on Render)
+  - ⚠️ **Important**: Render free tier resets files on redeploy
+    - Use "重置默认值" command to quickly restore settings after redeploy
+    - Avoid frequent redeployments to minimize data loss
 
 ## User Preferences
 - Manual control over code execution and library installation
