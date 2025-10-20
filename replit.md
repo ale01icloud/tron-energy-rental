@@ -88,6 +88,22 @@ Or update the workflow configuration to run your preferred script.
     - Must type "撤销" exactly (no other text works)
     - Prevents accidental undos from random replies to transaction messages
     - Still works by replying to transaction message + typing "撤销"
+- 2025-10-20:
+  - **Major upgrade: PostgreSQL database integration** 🎉
+    - Migrated from JSON file storage to PostgreSQL database
+    - All group states, rates, and admin data now persist in database
+    - ✅ Redeployment no longer resets settings or data
+    - ✅ Rate/exchange rate settings survive server restarts
+    - ✅ Transaction history preserved across deployments
+    - Added psycopg2-binary dependency
+    - Created database schema with groups and admins tables
+    - Updated init_database() to auto-create tables on startup
+  - **Data persistence guarantee**:
+    - Group-specific rates and exchanges永久保存
+    - Admin list stored in database, not file
+    - Logs still in local files (ephemeral)
+  - Updated deployment documentation with database setup instructions
+  - Added data/ to .gitignore (no longer commit runtime data)
 
 ## User Preferences
 - Manual control over code execution and library installation

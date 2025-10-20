@@ -23,6 +23,24 @@ python bot.py
 #### ✅ 保留的环境变量
 - `TELEGRAM_BOT_TOKEN` = 您的bot token
 - `OWNER_ID` = `7784416293`
+- `DATABASE_URL` = 数据库连接URL（自动创建，见下方）
+
+#### ✅ 配置PostgreSQL数据库
+
+1. 在Render Dashboard中，点击 **New +** → **PostgreSQL**
+2. 创建免费数据库实例：
+   - **Name**: `telegram-finance-bot-db`（或任意名称）
+   - **Database**: `financebot`
+   - **User**: `financebot_user`
+   - **Region**: 选择与Bot相同的区域
+   - **PostgreSQL Version**: 16
+   - **Instance Type**: Free
+
+3. 创建后，复制 **Internal Database URL**
+
+4. 回到Bot服务设置，添加环境变量：
+   - **Key**: `DATABASE_URL`
+   - **Value**: 粘贴刚才复制的Internal Database URL
 
 ### 2. 保存并重新部署
 
@@ -65,6 +83,26 @@ Render免费套餐15分钟无流量会休眠。解决方案：
 
 ---
 
+## 💾 数据持久化（重要！）
+
+### ✅ 使用PostgreSQL数据库
+
+从v2.0开始，bot使用PostgreSQL数据库存储：
+- ✅ 群组费率和汇率设置
+- ✅ 管理员列表
+- ✅ 群组交易记录
+
+**关键优势：**
+1. **重新部署不丢失数据** - 费率/汇率设置永久保存
+2. **自动备份** - Render数据库自动备份
+3. **多实例共享** - 支持未来扩展
+
+**注意：** 
+- 日志文件（`data/logs/`）仍存储在本地临时文件系统
+- 重新部署后日志会重置（不影响核心数据）
+
+---
+
 ## 📊 优势对比
 
 | 特性 | Polling模式 | Webhook模式 |
@@ -73,6 +111,7 @@ Render免费套餐15分钟无流量会休眠。解决方案：
 | Gunicorn兼容 | ✅ 完美 | ❌ 有问题 |
 | 配置复杂度 | ✅ 简单 | ⚠️ 复杂 |
 | 需要外部保活 | ⚠️ 是 | ⚠️ 是 |
+| 数据持久化 | ✅ PostgreSQL | ✅ PostgreSQL |
 
 ---
 
