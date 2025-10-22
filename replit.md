@@ -40,6 +40,12 @@ python filename.py
 Or update the workflow configuration to run your preferred script.
 
 ## Recent Changes
+- 2025-10-22:
+  - **Broadcast feature added**: OWNER can now broadcast messages to all users who have privately messaged the bot
+    - New commands: `广播 消息内容` or `群发 消息内容` (use in private chat with bot)
+    - Automatically sends to all users (excluding OWNER)
+    - Shows delivery statistics: success/failed/total counts
+    - User list extracted from data/logs/private_chats/ directory
 - 2025-10-14: Initial project setup with Python 3.11
 - Created basic structure with main.py and requirements.txt
 - Replaced with advanced finance bot using python-telegram-bot library
@@ -143,5 +149,8 @@ Or update the workflow configuration to run your preferred script.
   - All private messages are forwarded to the bot owner (OWNER_ID)
   - Owner can reply to users through the bot
   - All conversations are logged in data/logs/private_chats/
+  - **Broadcast feature**: OWNER can send messages to all users who have privately messaged the bot
+    - Command: `广播 消息内容` or `群发 消息内容`
+    - Shows delivery statistics (success/failed/total)
 - Data persistence with per-group JSON files (data/groups/group_<chat_id>.json)
 - HTTP keepalive server on port 5000

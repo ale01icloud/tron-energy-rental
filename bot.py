@@ -575,11 +575,75 @@ async def handle_text(update: Update, context: ContextTypes.DEFAULT_TYPE):
                                 await update.message.reply_text(f"❌ 发送失败: {e}")
                                 return
                 
+                # OWNER广播功能 - 群发消息给所有私聊过的用户
+                if text.startswith("广播 ") or text.startswith("群发 "):
+                    broadcast_text = text.split(" ", 1)[1] if len(text.split(" ", 1)) > 1 else ""
+                    
+                    if not broadcast_text:
+                        await update.message.reply_text(
+                            "❌ 请输入广播内容\n\n"
+                            "使用格式：\n"
+                            "广播 您的消息内容"
+                        )
+                        return
+                    
+                    # 获取所有私聊过的用户ID
+                    user_ids = []
+                    try:
+                        if private_log_dir.exists():
+                            for log_file in private_log_dir.glob("user_*.log"):
+                                try:
+                                    user_id = int(log_file.stem.split("_")[1])
+                                    if user_id != int(OWNER_ID):  # 排除OWNER自己
+                                        user_ids.append(user_id)
+                                except (ValueError, IndexError):
+                                    continue
+                    except Exception as e:
+                        await update.message.reply_text(f"❌ 读取用户列表失败: {e}")
+                        return
+                    
+                    if not user_ids:
+                        await update.message.reply_text("❌ 没有找到任何私聊用户")
+                        return
+                    
+                    # 开始群发
+                    await update.message.reply_text(
+                        f"📢 开始广播...\n"
+                        f"📊 目标用户数：{len(user_ids)}"
+                    )
+                    
+                    success_count = 0
+                    fail_count = 0
+                    
+                    for user_id in user_ids:
+                        try:
+                            await context.bot.send_message(
+                                chat_id=user_id,
+                                text=f"📢 系统通知：\n\n{broadcast_text}"
+                            )
+                            success_count += 1
+                        except Exception as e:
+                            fail_count += 1
+                            print(f"广播失败 (用户 {user_id}): {e}")
+                    
+                    # 发送统计报告
+                    await update.message.reply_text(
+                        f"✅ 广播完成！\n\n"
+                        f"📊 发送统计：\n"
+                        f"• 成功：{success_count} 人\n"
+                        f"• 失败：{fail_count} 人\n"
+                        f"• 总计：{len(user_ids)} 人"
+                    )
+                    return
+                
                 # OWNER发送的非回复私聊消息 - 提示用法
                 await update.message.reply_text(
                     "💡 使用提示：\n"
                     "• 回复转发的消息可以回复用户\n"
-                    "• 在群组中使用记账功能"
+                    "• 在群组中使用记账功能\n\n"
+                    "📢 广播功能：\n"
+                    "• 广播 您的消息内容\n"
+                    "• 群发 您的消息内容"
                 )
                 return
     
