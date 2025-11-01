@@ -35,6 +35,7 @@ externalPort = 3000
 
 [nix]
 channel = "stable-25_05"
+packages = ["openssh_gssapi"]
 
 [deployment]
 deploymentTarget = "vm"
