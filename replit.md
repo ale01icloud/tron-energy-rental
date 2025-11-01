@@ -40,6 +40,13 @@ python filename.py
 Or update the workflow configuration to run your preferred script.
 
 ## Recent Changes
+- 2025-11-01:
+  - **ClawCloud Run deployment support added**:
+    - Created Dockerfile for containerized deployment
+    - Added CLAWCLOUD_DEPLOY.md with complete deployment guide
+    - Added .dockerignore for optimized Docker builds
+    - Platform features: $5/month free tier, Docker native, visual management
+    - Estimated cost: ~$4/month (within free tier)
 - 2025-10-22:
   - **Broadcast feature added**: OWNER can now broadcast messages to all users who have privately messaged the bot
     - New commands: `广播 消息内容` or `群发 消息内容` (use in private chat with bot)

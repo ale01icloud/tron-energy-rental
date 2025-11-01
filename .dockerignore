@@ -1,0 +1,50 @@
+# Git相关
+.git
+.gitignore
+.gitattributes
+
+# Python缓存
+__pycache__
+*.py[cod]
+*$py.class
+*.so
+.Python
+
+# 虚拟环境
+venv/
+env/
+ENV/
+
+# 环境变量文件（敏感信息）
+.env
+.env.local
+
+# 数据文件（运行时生成）
+data/
+
+# 文档和说明
+*.md
+LICENSE
+
+# IDE配置
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# 日志文件
+*.log
+
+# 临时文件
+*.tmp
+.DS_Store
+Thumbs.db
+
+# Replit配置
+.replit
+replit.nix
+
+# 部署相关（不需要打包进镜像）
+render.yaml
+RENDER_POLLING_DEPLOY.md
+CLAWCLOUD_DEPLOY.md
